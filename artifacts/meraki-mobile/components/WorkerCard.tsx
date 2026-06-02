@@ -1,4 +1,5 @@
 import { AntDesign, Feather } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -7,13 +8,32 @@ import { StarRating } from "@/components/StarRating";
 import { useColors } from "@/hooks/useColors";
 import type { Worker } from "@workspace/api-client-react";
 
-function Avatar({ name, size = 48, bg }: { name: string; size?: number; bg: string }) {
+interface AvatarProps {
+  name: string;
+  photoUrl?: string | null;
+  size?: number;
+  bg: string;
+}
+
+export function WorkerAvatar({ name, photoUrl, size = 48, bg }: AvatarProps) {
   const initials = name
     .split(" ")
     .map((n) => n[0])
     .slice(0, 2)
     .join("")
     .toUpperCase();
+
+  if (photoUrl) {
+    return (
+      <Image
+        source={{ uri: photoUrl }}
+        style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: bg }}
+        contentFit="cover"
+        transition={200}
+      />
+    );
+  }
+
   return (
     <View
       style={{
@@ -71,7 +91,12 @@ export function WorkerCard({
         },
       ]}
     >
-      <Avatar name={worker.name} bg={colors.primary} size={compact ? 40 : 48} />
+      <WorkerAvatar
+        name={worker.name}
+        photoUrl={worker.photoUrl}
+        bg={colors.primary}
+        size={compact ? 40 : 48}
+      />
       <View style={styles.info}>
         <Text style={[styles.name, { color: colors.foreground }]}>{worker.name}</Text>
         <View style={styles.ratingRow}>
