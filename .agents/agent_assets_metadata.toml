@@ -18,3 +18,9 @@ id = "s8OqdxqJZIJGqjDOUdy_1"
 uri = "file://artifacts/meraki-web/public/worker-2.png"
 type = "image"
 title = "Worker profile avatar 2"
+
+[[generated]]
+id = "NDF3U9LpEAvEYOEBNFYfF"
+uri = "file://artifacts/meraki-mobile/assets/images/icon.png"
+type = "image"
+title = "meraki app icon terracotta house"

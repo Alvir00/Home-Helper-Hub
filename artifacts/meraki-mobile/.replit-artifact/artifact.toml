@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/meraki-mobile/"
+title = "Meraki Mobile"
+version = "1.0.0"
+id = "artifacts/meraki-mobile"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+name = "expo"
+paths = [ "/meraki-mobile/" ]
+localPort = 21448
+
+[services.development]
+run = "pnpm --filter @workspace/meraki-mobile run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/meraki-mobile", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/meraki-mobile", "run", "serve" ]
+
+[services.env]
+PORT = "21448"
+BASE_PATH = "/meraki-mobile/"
