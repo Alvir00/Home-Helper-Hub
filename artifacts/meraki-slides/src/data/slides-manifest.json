@@ -1,0 +1,74 @@
+[
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "position": 1,
+    "filepath": "src/pages/slides/Slide01Cover.tsx",
+    "title": "Cover",
+    "description": "Meraki brand cover with terracotta panel and investor presentation header.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+    "position": 2,
+    "filepath": "src/pages/slides/Slide02Problem.tsx",
+    "title": "The Problem",
+    "description": "Three pain points: no reliable channel, quality uncertainty, workers left behind.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+    "position": 3,
+    "filepath": "src/pages/slides/Slide03Solution.tsx",
+    "title": "Our Solution",
+    "description": "Meraki platform: cleaning, laundry, and combined packages. Book vetted workers in minutes.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "d4e5f6a7-b8c9-0123-defa-234567890123",
+    "position": 4,
+    "filepath": "src/pages/slides/Slide04Market.tsx",
+    "title": "Market Opportunity",
+    "description": "5M+ Addis Ababa population, 500K+ domestic workers, $2B+ informal market.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "e5f6a7b8-c9d0-1234-efab-345678901234",
+    "position": 5,
+    "filepath": "src/pages/slides/Slide05BusinessModel.tsx",
+    "title": "Business Model",
+    "description": "Two revenue streams: household subscriptions + 20% per-booking commission.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "f6a7b8c9-d0e1-2345-fabc-456789012345",
+    "position": 6,
+    "filepath": "src/pages/slides/Slide06SocialImpact.tsx",
+    "title": "Social Impact",
+    "description": "Fair pay, formal employment status, and skills growth for domestic workers.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a7b8c9d0-e1f2-3456-abcd-567890123456",
+    "position": 7,
+    "filepath": "src/pages/slides/Slide07Traction.tsx",
+    "title": "Traction & Roadmap",
+    "description": "320 waitlist households, 48 workers, 4.7 rating, 88% repeat rate. Roadmap to Series A.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "b8c9d0e1-f2a3-4567-bcde-678901234567",
+    "position": 8,
+    "filepath": "src/pages/slides/Slide08Team.tsx",
+    "title": "Team",
+    "description": "Three co-founders: CEO (operations), CTO (engineering), COO (social enterprise). Advisors.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "c9d0e1f2-a3b4-5678-cdef-789012345678",
+    "position": 9,
+    "filepath": "src/pages/slides/Slide09Ask.tsx",
+    "title": "The Ask",
+    "description": "$500K seed round: worker training 40%, product 30%, marketing 20%, ops 10%.",
+    "speakerNotes": ""
+  }
+]

@@ -1,0 +1,31 @@
+kind = "slides"
+previewPath = "/meraki-slides/"
+title = "Meraki Pitch Deck"
+version = "1.0.0"
+id = "artifacts/meraki-slides"
+router = "path"
+
+[[integratedSkills]]
+name = "slides"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/meraki-slides/" ]
+localPort = 25793
+
+[services.development]
+run = "pnpm --filter @workspace/meraki-slides run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/meraki-slides", "run", "build" ]
+publicDir = "artifacts/meraki-slides/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25793"
+BASE_PATH = "/meraki-slides/"
