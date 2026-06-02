@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, CheckCircle2, Star, Shield, Clock } from "lucide-react";
+import { ArrowRight, CheckCircle2, Star, Shield, Clock, Sparkles, Shirt, Home as HomeIcon } from "lucide-react";
 import { useListServices, getListServicesQueryKey } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -12,7 +12,7 @@ export default function Home() {
   return (
     <div className="flex flex-col w-full">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-accent/30 pt-16 pb-32 lg:pt-32 lg:pb-48">
+      <section className="relative overflow-hidden bg-accent/30 pt-16 pb-16 lg:pt-24 lg:pb-24">
         <div className="container mx-auto px-4 md:px-6">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
             <div className="flex flex-col justify-center space-y-8 relative z-10">
@@ -95,16 +95,20 @@ export default function Home() {
                 <div className="group flex flex-col h-full bg-card rounded-2xl border border-border overflow-hidden hover-elevate transition-all duration-300">
                   <div className="h-48 bg-muted flex items-center justify-center relative overflow-hidden">
                     <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-colors" />
-                    <span className="text-6xl text-primary/40 group-hover:text-primary/60 transition-colors group-hover:scale-110 duration-500">
-                      {service.category === 'cleaning' ? '✨' : service.category === 'laundry' ? '👕' : '🏠'}
-                    </span>
+                    {service.category === 'cleaning' ? (
+                      <Sparkles className="h-16 w-16 text-primary/50 group-hover:text-primary/70 transition-colors" />
+                    ) : service.category === 'laundry' ? (
+                      <Shirt className="h-16 w-16 text-primary/50 group-hover:text-primary/70 transition-colors" />
+                    ) : (
+                      <HomeIcon className="h-16 w-16 text-primary/50 group-hover:text-primary/70 transition-colors" />
+                    )}
                   </div>
                   <div className="p-6 flex flex-col flex-1">
                     <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">{service.name}</h3>
                     <p className="text-muted-foreground mb-6 flex-1 line-clamp-2">{service.description}</p>
                     <div className="flex items-center justify-between font-medium pt-4 border-t border-border">
                       <span>{service.durationHours} Hours</span>
-                      <span className="text-primary">${service.pricePerHour}/hr</span>
+                      <span className="text-primary">ETB {service.pricePerHour}/hr</span>
                     </div>
                   </div>
                 </div>

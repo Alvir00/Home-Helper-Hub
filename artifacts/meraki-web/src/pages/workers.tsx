@@ -112,6 +112,21 @@ export default function Workers() {
           <Button variant="outline" className="mt-4" onClick={() => setServiceFilter("all")}>Clear filters</Button>
         </div>
       )}
+
+      <div className="mt-16 bg-accent/30 rounded-3xl p-8 md:p-12 text-center border border-border">
+        <h2 className="text-2xl md:text-3xl font-bold mb-4">Ready to book a professional?</h2>
+        <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+          All our professionals are background-checked, trained, and rated by real customers across Addis Ababa.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Link href="/book">
+            <Button size="lg" className="shadow-sm">Book a Service</Button>
+          </Link>
+          <Link href="/plans">
+            <Button size="lg" variant="outline" className="bg-background">View Subscription Plans</Button>
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

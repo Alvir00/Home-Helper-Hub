@@ -2,7 +2,7 @@ import { useListServices, getListServicesQueryKey } from "@workspace/api-client-
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Clock, DollarSign, CheckCircle2 } from "lucide-react";
+import { Clock, Banknote, CheckCircle2, Sparkles, Shirt, Home as HomeIcon } from "lucide-react";
 
 export default function Services() {
   const { data: services, isLoading } = useListServices({
@@ -38,9 +38,13 @@ export default function Services() {
           services?.map((service) => (
             <div key={service.id} className="flex flex-col bg-card rounded-2xl border border-border overflow-hidden hover-elevate transition-all duration-300">
               <div className="h-48 bg-accent/50 flex items-center justify-center border-b border-border">
-                <span className="text-7xl opacity-80">
-                  {service.category === 'cleaning' ? '✨' : service.category === 'laundry' ? '👕' : '🏠'}
-                </span>
+                {service.category === 'cleaning' ? (
+                  <Sparkles className="h-16 w-16 text-primary/60" />
+                ) : service.category === 'laundry' ? (
+                  <Shirt className="h-16 w-16 text-primary/60" />
+                ) : (
+                  <HomeIcon className="h-16 w-16 text-primary/60" />
+                )}
               </div>
               <div className="p-6 flex flex-col flex-1">
                 <div className="flex justify-between items-start mb-4">
@@ -53,8 +57,8 @@ export default function Services() {
                 
                 <div className="space-y-3 mb-8 pt-6 border-t border-border">
                   <div className="flex items-center text-sm font-medium">
-                    <DollarSign className="w-4 h-4 mr-2 text-primary" />
-                    ${service.pricePerHour} per hour
+                    <Banknote className="w-4 h-4 mr-2 text-primary" />
+                    ETB {service.pricePerHour} per hour
                   </div>
                   <div className="flex items-center text-sm font-medium">
                     <Clock className="w-4 h-4 mr-2 text-primary" />

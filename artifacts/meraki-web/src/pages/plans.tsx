@@ -115,7 +115,8 @@ export default function Plans() {
               </CardHeader>
               <CardContent>
                 <div className="mb-6 flex items-baseline">
-                  <span className="text-4xl font-bold tracking-tight">${plan.priceMonthly}</span>
+                  <span className="text-sm font-semibold text-muted-foreground mr-1">ETB</span>
+                  <span className="text-4xl font-bold tracking-tight">{plan.priceMonthly}</span>
                   <span className="text-muted-foreground ml-1 font-medium">/month</span>
                 </div>
                 <div className="mb-6 text-sm font-medium text-primary bg-primary/10 inline-block px-3 py-1 rounded-full">
