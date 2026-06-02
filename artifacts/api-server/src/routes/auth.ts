@@ -2,15 +2,13 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import { usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
-import { createHmac, randomBytes } from "crypto";
+import { randomBytes } from "crypto";
+import bcrypt from "bcryptjs";
 import { RegisterBody, LoginBody } from "@workspace/api-zod";
 
 const router = Router();
 
-function hashPassword(password: string): string {
-  const salt = "meraki_salt_2024";
-  return createHmac("sha256", salt).update(password).digest("hex");
-}
+const BCRYPT_ROUNDS = 10;
 
 function generateToken(userId: number): string {
   const payload = `${userId}:${Date.now()}:${randomBytes(16).toString("hex")}`;
@@ -29,7 +27,6 @@ function userToResponse(user: typeof usersTable.$inferSelect) {
   };
 }
 
-// Simple in-memory token store (production would use Redis/DB)
 export const tokenStore = new Map<string, number>();
 
 router.post("/auth/register", async (req, res) => {
@@ -45,10 +42,12 @@ router.post("/auth/register", async (req, res) => {
     return res.status(400).json({ error: "email_taken", message: "Email already registered" });
   }
 
+  const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+
   const [user] = await db.insert(usersTable).values({
     name,
     email,
-    passwordHash: hashPassword(password),
+    passwordHash,
     phone: phone ?? null,
     address: address ?? null,
     role: "household",
@@ -69,7 +68,12 @@ router.post("/auth/login", async (req, res) => {
   const { email, password } = parsed.data;
   const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
 
-  if (!user || user.passwordHash !== hashPassword(password)) {
+  if (!user) {
+    return res.status(401).json({ error: "invalid_credentials", message: "Invalid email or password" });
+  }
+
+  const passwordMatch = await bcrypt.compare(password, user.passwordHash);
+  if (!passwordMatch) {
     return res.status(401).json({ error: "invalid_credentials", message: "Invalid email or password" });
   }
 

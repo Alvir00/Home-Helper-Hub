@@ -13,24 +13,27 @@ declare global {
   }
 }
 
-export async function requireAuth(req: Request, res: Response, next: NextFunction) {
+export async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "unauthorized", message: "Missing or invalid token" });
+    res.status(401).json({ error: "unauthorized", message: "Missing or invalid token" });
+    return;
   }
 
   const token = authHeader.slice(7);
   const userId = tokenStore.get(token);
 
   if (!userId) {
-    return res.status(401).json({ error: "unauthorized", message: "Invalid or expired token" });
+    res.status(401).json({ error: "unauthorized", message: "Invalid or expired token" });
+    return;
   }
 
   const [user] = await db.select({ id: usersTable.id, role: usersTable.role })
     .from(usersTable).where(eq(usersTable.id, userId)).limit(1);
 
   if (!user) {
-    return res.status(401).json({ error: "unauthorized", message: "User not found" });
+    res.status(401).json({ error: "unauthorized", message: "User not found" });
+    return;
   }
 
   req.userId = user.id;
@@ -38,14 +41,15 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
   next();
 }
 
-export function requireAdmin(req: Request, res: Response, next: NextFunction) {
+export function requireAdmin(req: Request, res: Response, next: NextFunction): void {
   if (req.userRole !== "admin") {
-    return res.status(403).json({ error: "forbidden", message: "Admin access required" });
+    res.status(403).json({ error: "forbidden", message: "Admin access required" });
+    return;
   }
   next();
 }
 
-export async function optionalAuth(req: Request, _res: Response, next: NextFunction) {
+export async function optionalAuth(req: Request, _res: Response, next: NextFunction): Promise<void> {
   const authHeader = req.headers.authorization;
   if (authHeader?.startsWith("Bearer ")) {
     const token = authHeader.slice(7);

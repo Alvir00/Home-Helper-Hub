@@ -301,7 +301,7 @@ router.get("/dashboard/admin/workers", requireAuth, requireAdmin, async (req, re
 
 // Admin: update worker status
 router.patch("/dashboard/admin/workers/:id/status", requireAuth, requireAdmin, async (req, res) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(String(req.params.id));
   if (isNaN(id)) return res.status(400).json({ error: "bad_request", message: "Invalid id" });
 
   const { status } = req.body;

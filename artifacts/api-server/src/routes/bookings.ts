@@ -146,7 +146,7 @@ router.post("/bookings", requireAuth, async (req, res) => {
 });
 
 router.get("/bookings/:id", requireAuth, async (req, res) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(String(req.params.id));
   if (isNaN(id)) return res.status(400).json({ error: "bad_request", message: "Invalid id" });
 
   const [booking] = await db.select().from(bookingsTable).where(eq(bookingsTable.id, id)).limit(1);
@@ -165,7 +165,7 @@ router.get("/bookings/:id", requireAuth, async (req, res) => {
 });
 
 router.patch("/bookings/:id", requireAuth, async (req, res) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(String(req.params.id));
   if (isNaN(id)) return res.status(400).json({ error: "bad_request", message: "Invalid id" });
 
   const parsed = UpdateBookingStatusBody.safeParse(req.body);
@@ -204,7 +204,7 @@ router.patch("/bookings/:id", requireAuth, async (req, res) => {
 });
 
 router.post("/bookings/:id/review", requireAuth, async (req, res) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(String(req.params.id));
   if (isNaN(id)) return res.status(400).json({ error: "bad_request", message: "Invalid id" });
 
   const parsed = ReviewBookingBody.safeParse(req.body);
