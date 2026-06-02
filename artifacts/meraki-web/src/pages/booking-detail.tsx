@@ -84,9 +84,10 @@ export default function BookingDetail() {
     reviewMutation.mutate(
       { id: bookingId, data: values },
       {
-        onSuccess: (updatedBooking) => {
+        onSuccess: () => {
           toast({ title: "Review submitted successfully!" });
-          queryClient.setQueryData(getGetBookingQueryKey(bookingId), updatedBooking);
+          queryClient.invalidateQueries({ queryKey: getGetBookingQueryKey(bookingId) });
+          form.reset();
         },
         onError: () => {
           toast({ variant: "destructive", title: "Failed to submit review" });
