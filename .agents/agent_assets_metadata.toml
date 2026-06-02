@@ -1,5 +1,4 @@
 uploads = []
-outputs = []
 
 [[generated]]
 id = "WnAUD4XeDXEtWwguhu9AZ"
@@ -24,3 +23,27 @@ id = "NDF3U9LpEAvEYOEBNFYfF"
 uri = "file://artifacts/meraki-mobile/assets/images/icon.png"
 type = "image"
 title = "meraki app icon terracotta house"
+
+[[generated]]
+id = "10BE0VJ7VsBx9O3EYQxB2"
+uri = "file://artifacts/meraki-video/public/images/busy-home.png"
+type = "image"
+title = "Busy terracotta household"
+
+[[generated]]
+id = "zZF8WNyptw0ouYI_KKd4o"
+uri = "file://artifacts/meraki-video/public/images/calm-home.png"
+type = "image"
+title = "Calm bright household"
+
+[[generated]]
+id = "fTpdNJB-2sQ8ovsWHP1GU"
+uri = "file://artifacts/meraki-video/public/images/worker.png"
+type = "image"
+title = "Smiling cleaner worker"
+
+[[outputs]]
+id = "c8WdLw0xuLGNNCVpO-7ym"
+uri = "file://artifacts/meraki-video/public/audio/bg_music.mp3"
+type = "audio"
+title = "Meraki promo background music"
