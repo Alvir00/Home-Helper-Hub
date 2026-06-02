@@ -1,0 +1,20 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "WnAUD4XeDXEtWwguhu9AZ"
+uri = "file://artifacts/meraki-web/public/hero-interior.png"
+type = "image"
+title = "Clean Ethiopian home interior"
+
+[[generated]]
+id = "ogxTVq8E8T8GkuKWhj0Is"
+uri = "file://artifacts/meraki-web/public/worker-1.png"
+type = "image"
+title = "Worker profile avatar 1"
+
+[[generated]]
+id = "s8OqdxqJZIJGqjDOUdy_1"
+uri = "file://artifacts/meraki-web/public/worker-2.png"
+type = "image"
+title = "Worker profile avatar 2"
