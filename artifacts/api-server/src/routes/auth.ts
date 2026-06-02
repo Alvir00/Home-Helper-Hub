@@ -38,7 +38,7 @@ router.post("/auth/register", async (req, res) => {
     return res.status(400).json({ error: "validation_error", message: parsed.error.message });
   }
 
-  const { name, email, password, phone, address, role } = parsed.data;
+  const { name, email, password, phone, address } = parsed.data;
 
   const existing = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
   if (existing.length > 0) {
@@ -51,7 +51,7 @@ router.post("/auth/register", async (req, res) => {
     passwordHash: hashPassword(password),
     phone: phone ?? null,
     address: address ?? null,
-    role: role ?? "household",
+    role: "household",
   }).returning();
 
   const token = generateToken(user.id);

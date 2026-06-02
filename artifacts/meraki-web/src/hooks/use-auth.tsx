@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useLocation } from "wouter";
-import { User } from "@workspace/api-client-react";
+import { User, setAuthTokenGetter } from "@workspace/api-client-react";
 
 interface AuthContextType {
   user: User | null;
@@ -29,6 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (storedToken && storedUser) {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
+        setAuthTokenGetter(() => storedToken);
       }
     } catch (e) {
       console.error("Failed to restore auth state", e);
@@ -42,6 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("meraki_user", JSON.stringify(newUser));
     setToken(newToken);
     setUser(newUser);
+    setAuthTokenGetter(() => newToken);
   };
 
   const logout = () => {
@@ -49,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("meraki_user");
     setToken(null);
     setUser(null);
+    setAuthTokenGetter(null);
     setLocation("/login");
   };
 

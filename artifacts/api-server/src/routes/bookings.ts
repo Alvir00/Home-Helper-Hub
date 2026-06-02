@@ -6,6 +6,7 @@ import {
   workersTable,
   servicesTable,
   workerServicesTable,
+  usersTable,
 } from "@workspace/db";
 import { eq, and, inArray, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
@@ -151,6 +152,15 @@ router.get("/bookings/:id", requireAuth, async (req, res) => {
   const [booking] = await db.select().from(bookingsTable).where(eq(bookingsTable.id, id)).limit(1);
   if (!booking) return res.status(404).json({ error: "not_found", message: "Booking not found" });
 
+  const [requester] = await db.select({ role: usersTable.role })
+    .from(usersTable)
+    .where(eq(usersTable.id, req.userId!))
+    .limit(1);
+
+  if (booking.userId !== req.userId && requester?.role !== "admin") {
+    return res.status(403).json({ error: "forbidden", message: "Access denied" });
+  }
+
   return res.json(await buildBookingResponse(booking));
 });
 
@@ -161,6 +171,18 @@ router.patch("/bookings/:id", requireAuth, async (req, res) => {
   const parsed = UpdateBookingStatusBody.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: "validation_error", message: parsed.error.message });
+  }
+
+  const [existing] = await db.select().from(bookingsTable).where(eq(bookingsTable.id, id)).limit(1);
+  if (!existing) return res.status(404).json({ error: "not_found", message: "Booking not found" });
+
+  const [requester] = await db.select({ role: usersTable.role })
+    .from(usersTable)
+    .where(eq(usersTable.id, req.userId!))
+    .limit(1);
+
+  if (existing.userId !== req.userId && requester?.role !== "admin") {
+    return res.status(403).json({ error: "forbidden", message: "Access denied" });
   }
 
   const [booking] = await db
