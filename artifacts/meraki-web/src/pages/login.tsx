@@ -104,9 +104,9 @@ export default function Login() {
                   <FormItem>
                     <div className="flex items-center justify-between">
                       <FormLabel>Password</FormLabel>
-                      <span className="text-sm text-muted-foreground">
+                      <Link href="/forgot-password" className="text-sm text-primary hover:underline">
                         Forgot password?
-                      </span>
+                      </Link>
                     </div>
                     <FormControl>
                       <Input type="password" placeholder="••••••••" {...field} />

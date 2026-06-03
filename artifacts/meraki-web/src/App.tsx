@@ -10,6 +10,8 @@ import { ProtectedRoute } from "@/components/protected-route";
 import Home from "@/pages/home";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
+import ForgotPassword from "@/pages/forgot-password";
+import ResetPassword from "@/pages/reset-password";
 import Services from "@/pages/services";
 import Workers from "@/pages/workers";
 import WorkerDetail from "@/pages/worker-detail";
@@ -41,6 +43,8 @@ function Router() {
         <Route path="/" component={Home} />
         <Route path="/login" component={Login} />
         <Route path="/register" component={Register} />
+        <Route path="/forgot-password" component={ForgotPassword} />
+        <Route path="/reset-password/:token" component={ResetPassword} />
         <Route path="/services" component={Services} />
         <Route path="/workers" component={Workers} />
         <Route path="/workers/:id" component={WorkerDetail} />
