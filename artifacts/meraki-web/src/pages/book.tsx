@@ -9,10 +9,14 @@ import {
   useListWorkers,
   getListWorkersQueryKey,
   useCreateBooking,
+  useGetMe,
+  getGetMeQueryKey,
+  useUpdateMe,
   WorkerStatus
 } from "@workspace/api-client-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 
 import { Button } from "@/components/ui/button";
@@ -71,8 +75,9 @@ const bookingSchema = z.object({
 
 export default function Book() {
   const [, setLocation] = useLocation();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, updateUser } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [step, setStep] = useState(1);
   
   // Extract query params for deep linking
@@ -80,17 +85,35 @@ export default function Book() {
   const initialService = urlParams.get('service') || "";
   const initialWorker = urlParams.get('worker') || "";
 
+  const { data: me } = useGetMe({
+    query: { queryKey: getGetMeQueryKey(), enabled: isAuthenticated }
+  });
+  const updateMeMutation = useUpdateMe();
+
+  const savedNeighborhood = (me as any)?.neighborhood || "";
+  const savedAddressDetail = me?.address || "";
+
   const form = useForm<z.infer<typeof bookingSchema>>({
     resolver: zodResolver(bookingSchema),
     defaultValues: {
       serviceId: initialService,
       workerId: initialWorker,
-      neighborhood: "",
-      addressDetail: "",
+      neighborhood: savedNeighborhood,
+      addressDetail: savedAddressDetail,
       notes: "",
       scheduledTime: "10:00",
     },
   });
+
+  // Sync neighborhood + address from profile once the user data loads
+  const neighborhoodField = form.watch("neighborhood");
+  const addressDetailField = form.watch("addressDetail");
+  if (savedNeighborhood && !neighborhoodField) {
+    form.setValue("neighborhood", savedNeighborhood);
+  }
+  if (savedAddressDetail && !addressDetailField) {
+    form.setValue("addressDetail", savedAddressDetail);
+  }
 
   const selectedServiceId = form.watch("serviceId");
   const selectedWorkerId = form.watch("workerId");
@@ -148,6 +171,18 @@ export default function Book() {
             title: "Booking Confirmed! 🎉",
             description: "Your service has been successfully scheduled.",
           });
+          // Persist neighborhood + address back to the user's profile silently
+          if (values.neighborhood !== (me as any)?.neighborhood || values.addressDetail !== me?.address) {
+            updateMeMutation.mutate(
+              { data: { neighborhood: values.neighborhood, address: values.addressDetail } as any },
+              {
+                onSuccess: (updated) => {
+                  updateUser(updated);
+                  queryClient.setQueryData(getGetMeQueryKey(), updated);
+                }
+              }
+            );
+          }
           setLocation(`/bookings/${booking.id}`);
         },
         onError: (error) => {

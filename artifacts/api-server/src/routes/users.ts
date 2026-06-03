@@ -13,6 +13,7 @@ function userToResponse(user: typeof usersTable.$inferSelect) {
     email: user.email,
     phone: user.phone ?? null,
     address: user.address ?? null,
+    neighborhood: user.neighborhood ?? null,
     role: user.role,
     createdAt: user.createdAt.toISOString(),
   };
@@ -25,11 +26,12 @@ router.get("/users/me", requireAuth, async (req, res) => {
 });
 
 router.patch("/users/me", requireAuth, async (req, res) => {
-  const { name, phone, address } = req.body;
+  const { name, phone, address, neighborhood } = req.body;
   const updates: Record<string, unknown> = {};
   if (name !== undefined) updates.name = name;
   if (phone !== undefined) updates.phone = phone;
   if (address !== undefined) updates.address = address;
+  if (neighborhood !== undefined) updates.neighborhood = neighborhood;
 
   const [user] = await db.update(usersTable).set(updates).where(eq(usersTable.id, req.userId!)).returning();
   return res.json(userToResponse(user));

@@ -13,11 +13,36 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const ADDIS_NEIGHBORHOODS = [
+  "Bole",
+  "Kazanchis",
+  "Piassa",
+  "CMC",
+  "Lideta",
+  "Kirkos",
+  "Yeka",
+  "Kolfe Keranio",
+  "Gulele",
+  "Arada",
+  "Addis Ketema",
+  "Nifas Silk-Lafto",
+  "Akaki Kality",
+  "Lemi Kura",
+  "Bole Bulbulo",
+  "Sarbet",
+  "Megenagna",
+  "Mexico Square",
+  "Arat Kilo",
+  "Saris",
+];
 
 const profileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   phone: z.string().optional(),
   address: z.string().optional(),
+  neighborhood: z.string().optional(),
 });
 
 export default function Profile() {
@@ -38,6 +63,7 @@ export default function Profile() {
       name: "",
       phone: "",
       address: "",
+      neighborhood: "",
     },
   });
 
@@ -48,6 +74,7 @@ export default function Profile() {
         name: user.name,
         phone: user.phone || "",
         address: user.address || "",
+        neighborhood: (user as any).neighborhood || "",
       });
     }
   }, [user, form]);
@@ -124,14 +151,38 @@ export default function Profile() {
 
                   <FormField
                     control={form.control}
+                    name="neighborhood"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Default Neighborhood</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select your neighborhood in Addis Ababa" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {ADDIS_NEIGHBORHOODS.map((name) => (
+                              <SelectItem key={name} value={name}>{name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground mt-1">Pre-filled automatically when you make a booking.</p>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
                     name="address"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Default Address</FormLabel>
+                        <FormLabel>Default Address Details</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Enter your home address" />
+                          <Input {...field} placeholder="e.g., Apt 4B, near Total petrol station" />
                         </FormControl>
-                        <p className="text-xs text-muted-foreground mt-1">This will be pre-filled when you make a booking.</p>
+                        <p className="text-xs text-muted-foreground mt-1">Apartment or landmark — combined with your neighborhood on bookings.</p>
                         <FormMessage />
                       </FormItem>
                     )}
