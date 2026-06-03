@@ -100,7 +100,7 @@ export default function AdminBookings() {
                   </TableCell>
                   <TableCell>{booking.service.name}</TableCell>
                   <TableCell>{booking.worker.name}</TableCell>
-                  <TableCell className="font-medium">${booking.totalPrice}</TableCell>
+                  <TableCell className="font-medium">ETB {booking.totalPrice}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className={`capitalize ${getStatusColor(booking.status)}`}>
                       {booking.status.replace('_', ' ')}

@@ -123,7 +123,7 @@ export default function WorkerDetail() {
                 <div key={service.id} className="p-4 rounded-xl border border-border bg-accent/20 flex flex-col">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-bold">{service.name}</h3>
-                    <span className="text-primary font-medium">${service.pricePerHour}/hr</span>
+                    <span className="text-primary font-medium">ETB {service.pricePerHour}/hr</span>
                   </div>
                   <p className="text-sm text-muted-foreground line-clamp-2">{service.description}</p>
                 </div>

@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Clock, ArrowRight } from "lucide-react";
+import { Clock, ArrowRight, Calendar } from "lucide-react";
 
 export default function Bookings() {
   const [activeTab, setActiveTab] = useState<string>("upcoming");
@@ -101,7 +101,7 @@ export default function Bookings() {
                           <div className="flex items-center text-muted-foreground text-sm">
                             <Clock className="w-4 h-4 mr-1.5" /> {booking.service.durationHours} hours
                             <span className="mx-2">•</span>
-                            <span className="font-medium text-foreground">${booking.totalPrice}</span>
+                            <span className="font-medium text-foreground">ETB {booking.totalPrice}</span>
                           </div>
                         </div>
                         <Link href={`/bookings/${booking.id}`}>
@@ -132,7 +132,9 @@ export default function Bookings() {
             </div>
           ) : (
             <div className="text-center py-20 bg-accent/10 rounded-2xl border border-dashed border-border">
-              <div className="text-5xl mb-4 opacity-50">📅</div>
+              <div className="flex justify-center mb-4 opacity-40">
+                <Calendar className="h-12 w-12" />
+              </div>
               <h3 className="text-xl font-bold mb-2">No bookings found</h3>
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                 You don't have any {activeTab} bookings at the moment. 

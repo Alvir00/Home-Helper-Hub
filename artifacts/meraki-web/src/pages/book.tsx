@@ -31,7 +31,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { CalendarIcon, ArrowRight, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { CalendarIcon, ArrowRight, ArrowLeft, CheckCircle2, Sparkles, Shirt, Home as HomeIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const bookingSchema = z.object({
@@ -184,8 +184,14 @@ export default function Book() {
                           >
                             <div className="flex justify-between items-start">
                               <div className="flex gap-4">
-                                <div className="text-3xl">
-                                  {service.category === 'cleaning' ? '✨' : service.category === 'laundry' ? '👕' : '🏠'}
+                                <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-primary/10">
+                                  {service.category === 'cleaning' ? (
+                                    <Sparkles className="h-5 w-5 text-primary" />
+                                  ) : service.category === 'laundry' ? (
+                                    <Shirt className="h-5 w-5 text-primary" />
+                                  ) : (
+                                    <HomeIcon className="h-5 w-5 text-primary" />
+                                  )}
                                 </div>
                                 <div>
                                   <h3 className="font-bold">{service.name}</h3>

@@ -42,6 +42,36 @@ uri = "file://artifacts/meraki-video/public/images/worker.png"
 type = "image"
 title = "Smiling cleaner worker"
 
+[[generated]]
+id = "rTKAeUUa6QdLxElwKU281"
+uri = "file://artifacts/meraki-web/public/service-cleaning.png"
+type = "image"
+title = "home cleaning service"
+
+[[generated]]
+id = "VVsWILgMsa1XpywiNho0-"
+uri = "file://artifacts/meraki-web/public/service-kitchen.png"
+type = "image"
+title = "kitchen cleaning service"
+
+[[generated]]
+id = "PD4Tu74zh2YVtjczxchDN"
+uri = "file://artifacts/meraki-web/public/service-laundry.png"
+type = "image"
+title = "laundry ironing service"
+
+[[generated]]
+id = "DcyGmcZI2wErsGbOgqbxJ"
+uri = "file://artifacts/meraki-web/public/service-combined.png"
+type = "image"
+title = "combined home laundry service"
+
+[[generated]]
+id = "R9RqGf7FlQZmj7JyxDilz"
+uri = "file://artifacts/meraki-web/public/service-bedroom.png"
+type = "image"
+title = "bedroom deep clean service"
+
 [[outputs]]
 id = "c8WdLw0xuLGNNCVpO-7ym"
 uri = "file://artifacts/meraki-video/public/audio/bg_music.mp3"

@@ -4,6 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Clock, Banknote, CheckCircle2, Sparkles, Shirt, Home as HomeIcon } from "lucide-react";
 
+const serviceImageMap: Record<string, string> = {
+  'Home Cleaning': '/service-cleaning.png',
+  'Kitchen Cleaning': '/service-kitchen.png',
+  'Laundry & Ironing': '/service-laundry.png',
+  'Combined Home & Laundry': '/service-combined.png',
+  'Bedroom Deep Clean': '/service-bedroom.png',
+};
+
 export default function Services() {
   const { data: services, isLoading } = useListServices({
     query: { queryKey: getListServicesQueryKey() }
@@ -37,13 +45,23 @@ export default function Services() {
         ) : (
           services?.map((service) => (
             <div key={service.id} className="flex flex-col bg-card rounded-2xl border border-border overflow-hidden hover-elevate transition-all duration-300">
-              <div className="h-48 bg-accent/50 flex items-center justify-center border-b border-border">
-                {service.category === 'cleaning' ? (
-                  <Sparkles className="h-16 w-16 text-primary/60" />
-                ) : service.category === 'laundry' ? (
-                  <Shirt className="h-16 w-16 text-primary/60" />
+              <div className="h-48 bg-accent/50 overflow-hidden border-b border-border relative">
+                {serviceImageMap[service.name] ? (
+                  <img
+                    src={serviceImageMap[service.name]}
+                    alt={service.name}
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
-                  <HomeIcon className="h-16 w-16 text-primary/60" />
+                  <div className="w-full h-full flex items-center justify-center">
+                    {service.category === 'cleaning' ? (
+                      <Sparkles className="h-16 w-16 text-primary/60" />
+                    ) : service.category === 'laundry' ? (
+                      <Shirt className="h-16 w-16 text-primary/60" />
+                    ) : (
+                      <HomeIcon className="h-16 w-16 text-primary/60" />
+                    )}
+                  </div>
                 )}
               </div>
               <div className="p-6 flex flex-col flex-1">
