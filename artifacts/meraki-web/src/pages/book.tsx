@@ -34,6 +34,29 @@ import { cn } from "@/lib/utils";
 import { CalendarIcon, ArrowRight, ArrowLeft, CheckCircle2, Sparkles, Shirt, Home as HomeIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+const ADDIS_NEIGHBORHOODS = [
+  "Bole",
+  "Kazanchis",
+  "Piassa",
+  "CMC",
+  "Lideta",
+  "Kirkos",
+  "Yeka",
+  "Kolfe Keranio",
+  "Gulele",
+  "Arada",
+  "Addis Ketema",
+  "Nifas Silk-Lafto",
+  "Akaki Kality",
+  "Lemi Kura",
+  "Bole Bulbulo",
+  "Sarbet",
+  "Megenagna",
+  "Mexico Square",
+  "Arat Kilo",
+  "Saris",
+];
+
 const bookingSchema = z.object({
   serviceId: z.string().min(1, "Please select a service"),
   workerId: z.string().min(1, "Please select a professional"),
@@ -41,7 +64,8 @@ const bookingSchema = z.object({
     required_error: "Please select a date",
   }),
   scheduledTime: z.string().min(1, "Please select a time"),
-  address: z.string().min(5, "Please enter your full address"),
+  neighborhood: z.string().min(1, "Please select your neighborhood"),
+  addressDetail: z.string().min(2, "Please add your apartment or house number"),
   notes: z.string().optional(),
 });
 
@@ -61,7 +85,8 @@ export default function Book() {
     defaultValues: {
       serviceId: initialService,
       workerId: initialWorker,
-      address: user?.address || "",
+      neighborhood: "",
+      addressDetail: "",
       notes: "",
       scheduledTime: "10:00",
     },
@@ -105,13 +130,15 @@ export default function Book() {
     const scheduledDateTime = new Date(values.scheduledDate);
     scheduledDateTime.setHours(parseInt(hours, 10), parseInt(minutes, 10));
 
+    const combinedAddress = `${values.neighborhood} — ${values.addressDetail}`;
+
     createBookingMutation.mutate(
       { 
         data: {
           serviceId: Number(values.serviceId),
           workerId: Number(values.workerId),
           scheduledDate: scheduledDateTime.toISOString(),
-          address: values.address,
+          address: combinedAddress,
           notes: values.notes
         } 
       },
@@ -355,12 +382,39 @@ export default function Book() {
 
                         <FormField
                           control={form.control}
-                          name="address"
+                          name="neighborhood"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Service Address</FormLabel>
+                              <FormLabel>Neighborhood</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                  <SelectTrigger className="h-11">
+                                    <SelectValue placeholder="Select your neighborhood in Addis Ababa" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {ADDIS_NEIGHBORHOODS.map((name) => (
+                                    <SelectItem key={name} value={name}>{name}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="addressDetail"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Apartment / House Number</FormLabel>
                               <FormControl>
-                                <Input placeholder="Apartment/House number, Street, Neighborhood" className="h-11" {...field} />
+                                <Input
+                                  placeholder="e.g., Apt 4B, near Total petrol station"
+                                  className="h-11"
+                                  {...field}
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
