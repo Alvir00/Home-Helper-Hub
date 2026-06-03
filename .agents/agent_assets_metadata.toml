@@ -10,13 +10,13 @@ title = "Clean Ethiopian home interior"
 id = "ogxTVq8E8T8GkuKWhj0Is"
 uri = "file://artifacts/meraki-web/public/worker-1.png"
 type = "image"
-title = "Worker profile avatar 1"
+title = "generated_image"
 
 [[generated]]
 id = "s8OqdxqJZIJGqjDOUdy_1"
 uri = "file://artifacts/meraki-web/public/worker-2.png"
 type = "image"
-title = "Worker profile avatar 2"
+title = "generated_image"
 
 [[generated]]
 id = "NDF3U9LpEAvEYOEBNFYfF"
@@ -71,6 +71,24 @@ id = "R9RqGf7FlQZmj7JyxDilz"
 uri = "file://artifacts/meraki-web/public/service-bedroom.png"
 type = "image"
 title = "bedroom deep clean service"
+
+[[generated]]
+id = "5XzNYq799ii3vHUuickfv"
+uri = "file://artifacts/meraki-web/public/worker-3.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "XV1bp851cSYtDa_CVJnwf"
+uri = "file://artifacts/meraki-web/public/worker-4.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "eVD9AIe_eaDWtgQd4pts1"
+uri = "file://artifacts/meraki-web/public/worker-5.png"
+type = "image"
+title = "generated_image"
 
 [[outputs]]
 id = "c8WdLw0xuLGNNCVpO-7ym"

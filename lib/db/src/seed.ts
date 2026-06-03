@@ -36,11 +36,11 @@ async function seed() {
   console.log(`  Services: ${insertedServices.length} ready`);
 
   const workerDefs = [
-    { name: "Tigist Haile", bio: "Experienced home cleaner with 5 years of service in Addis Ababa. Known for attention to detail and reliability.", phone: "+251911234567", photoUrl: "https://api.dicebear.com/7.x/personas/svg?seed=tigist", rating: 4.9, totalReviews: 47, completedBookings: 52, status: "approved" as const, services: ["Home Cleaning", "Kitchen Cleaning", "Combined Home & Laundry"] },
-    { name: "Mekdes Tadesse", bio: "Professional cleaner specializing in deep cleaning and laundry. Fast, thorough, and always on time.", phone: "+251922345678", photoUrl: "https://api.dicebear.com/7.x/personas/svg?seed=mekdes", rating: 4.7, totalReviews: 38, completedBookings: 41, status: "approved" as const, services: ["Home Cleaning", "Laundry & Ironing", "Combined Home & Laundry"] },
-    { name: "Selamawit Girma", bio: "Dedicated home helper with expertise in combined cleaning and laundry packages.", phone: "+251933456789", photoUrl: "https://api.dicebear.com/7.x/personas/svg?seed=selamawit", rating: 4.8, totalReviews: 29, completedBookings: 33, status: "approved" as const, services: ["Combined Home & Laundry", "Bedroom Deep Clean"] },
-    { name: "Hiwot Bekele", bio: "Friendly and professional cleaner. Specializes in kitchen deep cleaning and bedroom organization.", phone: "+251944567890", photoUrl: "https://api.dicebear.com/7.x/personas/svg?seed=hiwot", rating: 4.6, totalReviews: 22, completedBookings: 25, status: "approved" as const, services: ["Home Cleaning", "Kitchen Cleaning", "Bedroom Deep Clean"] },
-    { name: "Birtukan Alemu", bio: "Hardworking and detail-oriented. Excellent at laundry and ironing services.", phone: "+251955678901", photoUrl: "https://api.dicebear.com/7.x/personas/svg?seed=birtukan", rating: 4.5, totalReviews: 15, completedBookings: 18, status: "approved" as const, services: ["Laundry & Ironing"] },
+    { name: "Tigist Haile", bio: "Experienced home cleaner with 5 years of service in Addis Ababa. Known for attention to detail and reliability.", phone: "+251911234567", photoUrl: "/worker-1.png", rating: 4.9, totalReviews: 47, completedBookings: 52, status: "approved" as const, services: ["Home Cleaning", "Kitchen Cleaning", "Combined Home & Laundry"] },
+    { name: "Mekdes Tadesse", bio: "Professional cleaner specializing in deep cleaning and laundry. Fast, thorough, and always on time.", phone: "+251922345678", photoUrl: "/worker-2.png", rating: 4.7, totalReviews: 38, completedBookings: 41, status: "approved" as const, services: ["Home Cleaning", "Laundry & Ironing", "Combined Home & Laundry"] },
+    { name: "Selamawit Girma", bio: "Dedicated home helper with expertise in combined cleaning and laundry packages.", phone: "+251933456789", photoUrl: "/worker-3.png", rating: 4.8, totalReviews: 29, completedBookings: 33, status: "approved" as const, services: ["Combined Home & Laundry", "Bedroom Deep Clean"] },
+    { name: "Hiwot Bekele", bio: "Friendly and professional cleaner. Specializes in kitchen deep cleaning and bedroom organization.", phone: "+251944567890", photoUrl: "/worker-4.png", rating: 4.6, totalReviews: 22, completedBookings: 25, status: "approved" as const, services: ["Home Cleaning", "Kitchen Cleaning", "Bedroom Deep Clean"] },
+    { name: "Birtukan Alemu", bio: "Hardworking and detail-oriented. Excellent at laundry and ironing services.", phone: "+251955678901", photoUrl: "/worker-5.png", rating: 4.5, totalReviews: 15, completedBookings: 18, status: "approved" as const, services: ["Laundry & Ironing"] },
   ];
 
   for (const w of workerDefs) {
@@ -50,6 +50,14 @@ async function seed() {
     let workerId: number;
     if (existing.length > 0) {
       workerId = existing[0].id;
+      await db.update(workersTable).set({
+        photoUrl: w.photoUrl,
+        bio: w.bio,
+        rating: w.rating,
+        totalReviews: w.totalReviews,
+        completedBookings: w.completedBookings,
+        status: w.status,
+      }).where(eq(workersTable.id, workerId));
     } else {
       const [inserted] = await db.insert(workersTable).values({
         name: w.name,
