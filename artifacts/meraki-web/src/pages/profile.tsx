@@ -103,7 +103,7 @@ export default function Profile() {
                   />
                   
                   <div className="space-y-1">
-                    <FormLabel className="text-muted-foreground">Email</FormLabel>
+                    <label className="text-sm font-medium text-muted-foreground">Email</label>
                     <Input value={user?.email} disabled className="bg-muted/50" />
                     <p className="text-xs text-muted-foreground mt-1">Email cannot be changed.</p>
                   </div>

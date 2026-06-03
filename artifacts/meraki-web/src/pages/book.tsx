@@ -193,7 +193,7 @@ export default function Book() {
                                 </div>
                               </div>
                               <div className="text-right">
-                                <div className="font-bold text-primary">${service.pricePerHour}/hr</div>
+                                <div className="font-bold text-primary">ETB {service.pricePerHour}/hr</div>
                                 <div className="text-xs text-muted-foreground mt-1">~{service.durationHours} hrs</div>
                               </div>
                             </div>
@@ -447,7 +447,7 @@ export default function Book() {
                   <span className="text-sm text-muted-foreground">Estimated Total</span>
                   {selectedServiceObj ? (
                     <span className="font-bold text-xl text-primary">
-                      ${selectedServiceObj.pricePerHour * selectedServiceObj.durationHours}
+                      ETB {selectedServiceObj.pricePerHour * selectedServiceObj.durationHours}
                     </span>
                   ) : (
                     <span className="font-bold text-xl text-muted-foreground">--</span>

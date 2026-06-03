@@ -131,7 +131,7 @@ export default function BookingDetail() {
                   </CardDescription>
                 </div>
                 <div className="text-right">
-                  <div className="text-3xl font-bold text-primary">${booking.totalPrice}</div>
+                  <div className="text-3xl font-bold text-primary">ETB {booking.totalPrice}</div>
                   <div className="text-sm text-muted-foreground">Total</div>
                 </div>
               </div>
