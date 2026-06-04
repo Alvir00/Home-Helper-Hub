@@ -202,7 +202,8 @@ export default function Book() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-4xl">
+    <>
+    <div className="container mx-auto px-4 pt-12 pb-36 max-w-4xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight mb-2">Book a Service</h1>
         <div className="flex items-center text-sm font-medium text-muted-foreground">
@@ -264,16 +265,6 @@ export default function Book() {
                           </div>
                         ))}
                       </div>
-                      <div className="mt-8 flex justify-end">
-                        <Button 
-                          type="button" 
-                          onClick={() => setStep(2)} 
-                          disabled={!selectedServiceId}
-                          className="px-8"
-                        >
-                          Continue <ArrowRight className="ml-2 h-4 w-4" />
-                        </Button>
-                      </div>
                     </div>
                   )}
 
@@ -321,17 +312,6 @@ export default function Book() {
                         </div>
                       )}
                       
-                      <div className="mt-8 flex justify-between">
-                        <Button variant="outline" type="button" onClick={() => setStep(1)}>Back</Button>
-                        <Button 
-                          type="button" 
-                          onClick={() => setStep(3)} 
-                          disabled={!selectedWorkerId}
-                          className="px-8"
-                        >
-                          Continue <ArrowRight className="ml-2 h-4 w-4" />
-                        </Button>
-                      </div>
                     </div>
                   )}
 
@@ -471,16 +451,6 @@ export default function Book() {
                         />
                       </div>
                       
-                      <div className="mt-8 flex justify-between pt-6 border-t">
-                        <Button variant="outline" type="button" onClick={() => setStep(2)}>Back</Button>
-                        <Button 
-                          type="submit" 
-                          disabled={createBookingMutation.isPending}
-                          className="px-8"
-                        >
-                          {createBookingMutation.isPending ? "Confirming..." : "Confirm Booking"}
-                        </Button>
-                      </div>
                     </div>
                   )}
 
@@ -556,5 +526,44 @@ export default function Book() {
         </div>
       </div>
     </div>
+
+    {/* ── Sticky step navigation — always visible ── */}
+    <div className="sticky bottom-0 z-20 bg-background/95 backdrop-blur-sm border-t border-border shadow-lg">
+      <div className="container mx-auto px-4 max-w-4xl py-4 flex items-center justify-between gap-4">
+        {step > 1 ? (
+          <Button
+            variant="outline"
+            type="button"
+            onClick={() => setStep((step - 1) as 1 | 2 | 3)}
+            className="gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" /> Back
+          </Button>
+        ) : (
+          <div />
+        )}
+
+        {step < 3 ? (
+          <Button
+            type="button"
+            onClick={() => setStep((step + 1) as 2 | 3)}
+            disabled={step === 1 ? !selectedServiceId : !selectedWorkerId}
+            className="px-8 gap-2"
+          >
+            Continue <ArrowRight className="h-4 w-4" />
+          </Button>
+        ) : (
+          <Button
+            type="submit"
+            form="booking-form"
+            disabled={createBookingMutation.isPending}
+            className="px-8"
+          >
+            {createBookingMutation.isPending ? "Confirming..." : "Confirm Booking"}
+          </Button>
+        )}
+      </div>
+    </div>
+    </>
   );
 }

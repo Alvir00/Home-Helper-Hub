@@ -1,4 +1,4 @@
-import { AntDesign, Feather } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import React from "react";
@@ -15,7 +15,7 @@ interface AvatarProps {
   bg: string;
 }
 
-export function WorkerAvatar({ name, photoUrl, size = 48, bg }: AvatarProps) {
+export function WorkerAvatar({ name, photoUrl, size = 56, bg }: AvatarProps) {
   const initials = name
     .split(" ")
     .map((n) => n[0])
@@ -78,27 +78,40 @@ export function WorkerCard({
     }
   };
 
+  const avatarSize = compact ? 44 : 56;
+
   return (
     <Pressable
       onPress={handlePress}
       style={({ pressed }) => [
         styles.card,
         {
-          backgroundColor: selected ? colors.accent : colors.card,
+          backgroundColor: selected ? `${colors.primary}12` : colors.card,
           borderColor: selected ? colors.primary : colors.border,
           borderRadius: colors.radius,
-          opacity: pressed ? 0.85 : 1,
+          opacity: pressed ? 0.88 : 1,
         },
       ]}
     >
-      <WorkerAvatar
-        name={worker.name}
-        photoUrl={worker.photoUrl}
-        bg={colors.primary}
-        size={compact ? 40 : 48}
-      />
+      {/* Avatar */}
+      <View style={styles.avatarWrap}>
+        <WorkerAvatar
+          name={worker.name}
+          photoUrl={worker.photoUrl}
+          bg={colors.primary}
+          size={avatarSize}
+        />
+        {selected && (
+          <View style={[styles.selectedBadge, { backgroundColor: colors.primary }]}>
+            <Feather name="check" size={10} color="#FFF" />
+          </View>
+        )}
+      </View>
+
+      {/* Info */}
       <View style={styles.info}>
         <Text style={[styles.name, { color: colors.foreground }]}>{worker.name}</Text>
+
         <View style={styles.ratingRow}>
           {rating > 0 ? (
             <>
@@ -108,26 +121,40 @@ export function WorkerCard({
               </Text>
             </>
           ) : (
-            <Text style={[styles.ratingText, { color: colors.mutedForeground }]}>New helper</Text>
+            <Text style={[styles.newBadge, { color: colors.primary }]}>New helper</Text>
           )}
         </View>
+
         {!compact && (
-          <Text style={[styles.services, { color: colors.mutedForeground }]} numberOfLines={1}>
-            {worker.services.map((s) => s.name).join(" · ")}
-          </Text>
+          <View style={styles.metaRow}>
+            <View style={[styles.jobsChip, { backgroundColor: `${colors.primary}12` }]}>
+              <Text style={[styles.jobsText, { color: colors.primary }]}>
+                {worker.completedBookings} jobs
+              </Text>
+            </View>
+            {worker.services.length > 0 && (
+              <Text
+                style={[styles.services, { color: colors.mutedForeground }]}
+                numberOfLines={1}
+              >
+                {worker.services.slice(0, 2).map((s) => s.name).join(" · ")}
+              </Text>
+            )}
+          </View>
         )}
       </View>
-      {onBook && (
+
+      {/* Action */}
+      {onBook ? (
         <Pressable
           onPress={onBook}
           style={[styles.bookBtn, { backgroundColor: colors.primary }]}
         >
           <Text style={styles.bookBtnText}>Book</Text>
         </Pressable>
-      )}
-      {selected && !onBook && (
-        <Feather name="check-circle" size={22} color={colors.primary} />
-      )}
+      ) : !selected ? (
+        <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
+      ) : null}
     </Pressable>
   );
 }
@@ -141,15 +168,39 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     marginBottom: 10,
   },
+  avatarWrap: {
+    position: "relative",
+    flexShrink: 0,
+  },
+  selectedBadge: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "#FFF",
+  },
   info: { flex: 1, gap: 4 },
-  name: { fontSize: 15, fontWeight: "600" },
+  name: { fontSize: 15, fontWeight: "600", fontFamily: "Inter_600SemiBold" },
   ratingRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   ratingText: { fontSize: 12 },
-  services: { fontSize: 12 },
+  newBadge: { fontSize: 12, fontWeight: "600" },
+  metaRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 2, flexWrap: "wrap" },
+  jobsChip: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 20,
+  },
+  jobsText: { fontSize: 11, fontWeight: "600" },
+  services: { fontSize: 11, flex: 1 },
   bookBtn: {
-    paddingVertical: 7,
-    paddingHorizontal: 14,
-    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 10,
   },
   bookBtnText: { color: "#FFFFFF", fontWeight: "600", fontSize: 13 },
 });

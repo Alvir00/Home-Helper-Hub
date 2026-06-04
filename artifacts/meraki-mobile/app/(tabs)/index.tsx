@@ -28,7 +28,7 @@ export default function HomeScreen() {
 
   const { data: services, isLoading: servLoading, refetch: refetchServices } = useListServices();
   const { data: workersData, isLoading: workersLoading, refetch: refetchWorkers } =
-    useListWorkers({ limit: 6 });
+    useListWorkers({ limit: 4 });
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -40,18 +40,20 @@ export default function HomeScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
+
+      {/* ── Header ── */}
       <LinearGradient
         colors={[colors.primary, "#A84E24"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={[styles.header, { paddingTop: topPad + 12 }]}
+        style={[styles.header, { paddingTop: topPad + 16 }]}
       >
-        <View style={styles.headerContent}>
+        {/* Top row */}
+        <View style={styles.topRow}>
           <View>
             <Text style={styles.logoText}>meraki</Text>
             <Text style={styles.greeting}>
-              {user ? `Hello, ${user.name.split(" ")[0]}` : "Welcome back"}
+              {user ? `Hello, ${user.name.split(" ")[0]} 👋` : "Welcome back"}
             </Text>
           </View>
           <View style={styles.locationPill}>
@@ -59,7 +61,26 @@ export default function HomeScreen() {
             <Text style={[styles.locationText, { color: colors.primary }]}>Addis Ababa</Text>
           </View>
         </View>
+
+        {/* Tagline */}
         <Text style={styles.tagline}>Your home, perfectly kept.</Text>
+
+        {/* Stats row */}
+        <View style={styles.statsRow}>
+          {[
+            { icon: "home" as const,  value: "500+",  label: "Homes" },
+            { icon: "star" as const,  value: "4.8★",  label: "Rating" },
+            { icon: "users" as const, value: "15+",   label: "Areas" },
+          ].map((s, i) => (
+            <React.Fragment key={s.label}>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{s.value}</Text>
+                <Text style={styles.statLabel}>{s.label}</Text>
+              </View>
+              {i < 2 && <View style={styles.statDivider} />}
+            </React.Fragment>
+          ))}
+        </View>
       </LinearGradient>
 
       <ScrollView
@@ -76,13 +97,42 @@ export default function HomeScreen() {
           />
         }
       >
+        {/* Quick Book CTA */}
+        <Pressable
+          onPress={() => router.push("/(tabs)/book")}
+          style={({ pressed }) => [
+            styles.ctaCard,
+            {
+              backgroundColor: colors.primary,
+              borderRadius: colors.radius,
+              opacity: pressed ? 0.9 : 1,
+            },
+          ]}
+        >
+          <View>
+            <Text style={styles.ctaTitle}>Book a Service</Text>
+            <Text style={styles.ctaSubtitle}>Available today from 8:00 AM</Text>
+          </View>
+          <View style={styles.ctaArrow}>
+            <Feather name="arrow-right" size={20} color={colors.primary} />
+          </View>
+        </Pressable>
+
         {/* Services */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Our Services</Text>
+          <View style={styles.sectionHeader}>
+            <View>
+              <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Our Services</Text>
+              <Text style={[styles.sectionSub, { color: colors.mutedForeground }]}>
+                Tap to book instantly
+              </Text>
+            </View>
+          </View>
+
           {servLoading ? (
             <ActivityIndicator color={colors.primary} style={{ marginTop: 16 }} />
           ) : (
-            <View style={styles.servicesGrid}>
+            <View>
               {(services ?? []).map((service: Service) => (
                 <ServiceCard
                   key={service.id}
@@ -94,14 +144,20 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* Featured Helpers */}
+        {/* Top Helpers */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Top Helpers</Text>
+            <View>
+              <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Top Helpers</Text>
+              <Text style={[styles.sectionSub, { color: colors.mutedForeground }]}>
+                Background-checked & rated
+              </Text>
+            </View>
             <Pressable onPress={() => router.push("/(tabs)/book")}>
               <Text style={[styles.seeAll, { color: colors.primary }]}>See all</Text>
             </Pressable>
           </View>
+
           {workersLoading ? (
             <ActivityIndicator color={colors.primary} style={{ marginTop: 16 }} />
           ) : (workersData?.workers ?? []).length === 0 ? (
@@ -115,38 +171,20 @@ export default function HomeScreen() {
           )}
         </View>
       </ScrollView>
-
-      {/* Floating Book Button */}
-      <View
-        style={[
-          styles.fab,
-          {
-            bottom: insets.bottom + (Platform.OS === "web" ? 84 : 16),
-          },
-        ]}
-      >
-        <Pressable
-          onPress={() => router.push("/(tabs)/book")}
-          style={({ pressed }) => [
-            styles.fabBtn,
-            { backgroundColor: colors.primary, opacity: pressed ? 0.9 : 1 },
-          ]}
-        >
-          <Feather name="plus" size={20} color="#FFFFFF" />
-          <Text style={styles.fabText}>Book a Service</Text>
-        </Pressable>
-      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+
+  /* Header */
   header: {
     paddingHorizontal: 20,
     paddingBottom: 24,
+    gap: 4,
   },
-  headerContent: {
+  topRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
@@ -154,13 +192,13 @@ const styles = StyleSheet.create({
   },
   logoText: {
     color: "#FFFFFF",
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: "800",
     letterSpacing: 1.5,
     fontFamily: "Inter_700Bold",
   },
   greeting: {
-    color: "rgba(255,255,255,0.85)",
+    color: "rgba(255,255,255,0.82)",
     fontSize: 13,
     marginTop: 2,
     fontFamily: "Inter_400Regular",
@@ -169,7 +207,7 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.9)",
     fontSize: 15,
     fontFamily: "Inter_500Medium",
-    marginTop: 4,
+    marginBottom: 16,
   },
   locationPill: {
     flexDirection: "row",
@@ -184,49 +222,84 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
   },
-  scroll: { padding: 16 },
-  section: { marginBottom: 24 },
+
+  /* Stats */
+  statsRow: {
+    flexDirection: "row",
+    backgroundColor: "rgba(0,0,0,0.15)",
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginTop: 4,
+    alignItems: "center",
+    justifyContent: "space-around",
+  },
+  statItem: { alignItems: "center", flex: 1 },
+  statValue: {
+    color: "#FFFFFF",
+    fontSize: 17,
+    fontWeight: "800",
+    fontFamily: "Inter_700Bold",
+  },
+  statLabel: {
+    color: "rgba(255,255,255,0.75)",
+    fontSize: 11,
+    marginTop: 1,
+  },
+  statDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: "rgba(255,255,255,0.25)",
+  },
+
+  /* Scroll */
+  scroll: { padding: 16, gap: 4 },
+
+  /* CTA Card */
+  ctaCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 18,
+    marginBottom: 20,
+  },
+  ctaTitle: {
+    color: "#FFFFFF",
+    fontSize: 17,
+    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
+  },
+  ctaSubtitle: {
+    color: "rgba(255,255,255,0.8)",
+    fontSize: 12,
+    marginTop: 2,
+  },
+  ctaArrow: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  /* Section */
+  section: { marginBottom: 8 },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
+    alignItems: "flex-end",
+    marginBottom: 14,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: "700",
-    marginBottom: 12,
     fontFamily: "Inter_700Bold",
+  },
+  sectionSub: {
+    fontSize: 12,
+    marginTop: 2,
   },
   seeAll: { fontSize: 14, fontWeight: "600" },
-  servicesGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-  },
   emptyText: { fontSize: 14, textAlign: "center", marginTop: 16 },
-  fab: {
-    position: "absolute",
-    left: 20,
-    right: 20,
-  },
-  fabBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 16,
-    borderRadius: 16,
-    gap: 8,
-    shadowColor: "#C1622F",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  fabText: {
-    color: "#FFFFFF",
-    fontWeight: "700",
-    fontSize: 16,
-    fontFamily: "Inter_700Bold",
-  },
 });

@@ -69,7 +69,7 @@ export default function BookScreen() {
   const dates = useMemo(() => getDates(7), []);
 
   const topPad = insets.top + (Platform.OS === "web" ? 67 : 0);
-  const bottomPad = insets.bottom + (Platform.OS === "web" ? 34 : 0);
+  const bottomPad = insets.bottom + (Platform.OS === "web" ? 84 : 0);
 
   if (!user) {
     return (
