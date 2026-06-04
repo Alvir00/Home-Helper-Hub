@@ -139,16 +139,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <h3 className="font-semibold mb-4">Company</h3>
               <ul className="space-y-2">
                 <li><Link href="/workers" className="text-sm text-muted-foreground hover:text-primary transition-colors">Our Workers</Link></li>
-                <li><Link href="/about" className="text-sm text-muted-foreground hover:text-primary transition-colors">About Us</Link></li>
-                <li><Link href="/contact" className="text-sm text-muted-foreground hover:text-primary transition-colors">Contact</Link></li>
+                <li><Link href="/plans" className="text-sm text-muted-foreground hover:text-primary transition-colors">Subscription Plans</Link></li>
+                <li><Link href="/book" className="text-sm text-muted-foreground hover:text-primary transition-colors">Book a Service</Link></li>
               </ul>
             </div>
             
             <div>
-              <h3 className="font-semibold mb-4">Legal</h3>
+              <h3 className="font-semibold mb-4">Account</h3>
               <ul className="space-y-2">
-                <li><Link href="/terms" className="text-sm text-muted-foreground hover:text-primary transition-colors">Terms of Service</Link></li>
-                <li><Link href="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/login" className="text-sm text-muted-foreground hover:text-primary transition-colors">Log In</Link></li>
+                <li><Link href="/register" className="text-sm text-muted-foreground hover:text-primary transition-colors">Sign Up</Link></li>
+                <li><Link href="/bookings" className="text-sm text-muted-foreground hover:text-primary transition-colors">My Bookings</Link></li>
               </ul>
             </div>
           </div>

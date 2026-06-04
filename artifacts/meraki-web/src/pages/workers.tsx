@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Star, MapPin, CheckCircle2 } from "lucide-react";
+import { Star, CheckCircle2, SlidersHorizontal } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function Workers() {
@@ -20,111 +20,146 @@ export default function Workers() {
     { query: { queryKey: getListWorkersQueryKey({ serviceId: serviceFilter !== "all" ? Number(serviceFilter) : undefined }) } }
   );
 
+  const approvedWorkers = workersData?.workers.filter(w => w.status === WorkerStatus.approved) ?? [];
+
   return (
-    <div className="container mx-auto px-4 py-12 md:py-16">
-      <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
-        <div className="max-w-2xl">
-          <h1 className="text-4xl font-bold tracking-tight mb-4">Our Professionals</h1>
-          <p className="text-xl text-muted-foreground">
-            Meet the vetted, top-rated cleaners and helpers ready to serve you.
-          </p>
-        </div>
-        
-        <div className="w-full md:w-64">
-          <Select value={serviceFilter} onValueChange={setServiceFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by service" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Services</SelectItem>
-              {services?.map(s => (
-                <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+    <div className="flex flex-col w-full">
+
+      {/* ── Page Header ── */}
+      <div className="bg-gradient-to-br from-[#FAF7F4] to-[#f0e8e0] border-b border-border/50">
+        <div className="container mx-auto px-4 md:px-6 py-16 md:py-20">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+            <div className="max-w-xl">
+              <p className="text-primary font-semibold text-sm uppercase tracking-wider mb-2">Our Team</p>
+              <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
+                Meet our Professionals
+              </h1>
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                Every Meraki professional is background-checked, trained, and rated by real customers across Addis Ababa.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 w-full md:w-72">
+              <SlidersHorizontal className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <Select value={serviceFilter} onValueChange={setServiceFilter}>
+                <SelectTrigger className="bg-background">
+                  <SelectValue placeholder="Filter by service" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Services</SelectItem>
+                  {services?.map(s => (
+                    <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {isLoading ? (
-          Array(8).fill(0).map((_, i) => (
-            <div key={i} className="rounded-2xl border border-border bg-card p-6 flex flex-col items-center">
-              <Skeleton className="h-24 w-24 rounded-full mb-4" />
-              <Skeleton className="h-6 w-1/2 mb-2" />
-              <Skeleton className="h-4 w-1/3 mb-4" />
-              <Skeleton className="h-4 w-full mb-2" />
-              <Skeleton className="h-4 w-4/5 mb-6" />
-              <Skeleton className="h-10 w-full mt-auto" />
-            </div>
-          ))
-        ) : (
-          workersData?.workers.filter(w => w.status === WorkerStatus.approved).map((worker) => (
-            <div key={worker.id} className="group rounded-2xl border border-border bg-card p-6 flex flex-col items-center text-center hover-elevate transition-all duration-300">
-              <Avatar className="h-24 w-24 mb-4 border-4 border-accent">
-                <AvatarImage src={worker.photoUrl || undefined} alt={worker.name} />
-                <AvatarFallback className="text-2xl bg-primary/10 text-primary">{worker.name.charAt(0)}</AvatarFallback>
-              </Avatar>
-              
-              <h2 className="text-xl font-bold tracking-tight mb-1 group-hover:text-primary transition-colors">{worker.name}</h2>
-              
-              <div className="flex items-center justify-center gap-1 text-sm font-medium text-amber-500 mb-3">
-                <Star className="h-4 w-4 fill-current" />
-                <span>{worker.rating?.toFixed(1) || 'New'}</span>
-                <span className="text-muted-foreground ml-1">({worker.totalReviews} reviews)</span>
+      {/* ── Workers Grid ── */}
+      <div className="container mx-auto px-4 md:px-6 py-12 md:py-16">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {isLoading ? (
+            Array(8).fill(0).map((_, i) => (
+              <div key={i} className="rounded-2xl border border-border bg-card overflow-hidden">
+                <Skeleton className="h-56 w-full rounded-none" />
+                <div className="p-5 space-y-3">
+                  <Skeleton className="h-5 w-2/3" />
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-9 w-full mt-2" />
+                </div>
               </div>
-              
-              <div className="flex flex-wrap justify-center gap-1.5 mb-4">
-                {worker.services.slice(0, 2).map(s => (
-                  <Badge key={s.id} variant="secondary" className="bg-accent text-accent-foreground font-normal">
-                    {s.name}
-                  </Badge>
-                ))}
-                {worker.services.length > 2 && (
-                  <Badge variant="secondary" className="bg-accent text-accent-foreground font-normal">
-                    +{worker.services.length - 2} more
-                  </Badge>
-                )}
-              </div>
-              
-              <p className="text-sm text-muted-foreground line-clamp-2 mb-6 w-full">
-                {worker.bio}
-              </p>
-              
-              <div className="flex items-center justify-between w-full mt-auto pt-4 border-t border-border">
-                <div className="flex items-center text-xs font-medium text-muted-foreground">
-                  <CheckCircle2 className="h-3.5 w-3.5 mr-1 text-primary" />
+            ))
+          ) : approvedWorkers.map((worker) => (
+            <div key={worker.id} className="group rounded-2xl border border-border bg-card overflow-hidden hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 transition-all duration-300 flex flex-col">
+
+              {/* Photo area */}
+              <div className="relative h-56 bg-muted overflow-hidden">
+                <Avatar className="w-full h-full rounded-none">
+                  <AvatarImage
+                    src={worker.photoUrl || undefined}
+                    alt={worker.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <AvatarFallback className="w-full h-full rounded-none text-5xl bg-primary/10 text-primary">
+                    {worker.name.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+
+                {/* Rating chip */}
+                <div className="absolute top-3 right-3 bg-background/90 backdrop-blur-sm rounded-full px-2.5 py-1 flex items-center gap-1 text-xs font-semibold shadow-sm border border-border/50">
+                  <Star className="h-3 w-3 text-amber-500 fill-current" />
+                  {worker.rating?.toFixed(1) || 'New'}
+                </div>
+
+                {/* Jobs chip */}
+                <div className="absolute bottom-3 left-3 bg-background/90 backdrop-blur-sm rounded-full px-2.5 py-1 flex items-center gap-1 text-xs font-medium shadow-sm border border-border/50">
+                  <CheckCircle2 className="h-3 w-3 text-primary" />
                   {worker.completedBookings} jobs
                 </div>
-                <Link href={`/workers/${worker.id}`}>
-                  <Button size="sm" variant="ghost" className="text-primary hover:text-primary/80 hover:bg-primary/10">
+              </div>
+
+              {/* Info */}
+              <div className="p-5 flex flex-col flex-1">
+                <h2 className="text-lg font-bold tracking-tight mb-0.5 group-hover:text-primary transition-colors">
+                  {worker.name}
+                </h2>
+                <p className="text-xs text-muted-foreground mb-3">
+                  {worker.totalReviews} review{worker.totalReviews !== 1 ? 's' : ''}
+                </p>
+
+                <div className="flex flex-wrap gap-1.5 mb-4">
+                  {worker.services.slice(0, 2).map(s => (
+                    <Badge key={s.id} variant="secondary" className="bg-primary/8 text-primary border-primary/15 text-[11px] font-medium">
+                      {s.name}
+                    </Badge>
+                  ))}
+                  {worker.services.length > 2 && (
+                    <Badge variant="secondary" className="bg-muted text-muted-foreground text-[11px]">
+                      +{worker.services.length - 2}
+                    </Badge>
+                  )}
+                </div>
+
+                {worker.bio && (
+                  <p className="text-sm text-muted-foreground line-clamp-2 mb-5 flex-1 leading-relaxed">
+                    {worker.bio}
+                  </p>
+                )}
+
+                <Link href={`/workers/${worker.id}`} className="mt-auto">
+                  <Button variant="outline" size="sm" className="w-full hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors">
                     View Profile
                   </Button>
                 </Link>
               </div>
             </div>
-          ))
-        )}
-      </div>
-      
-      {!isLoading && workersData?.workers.filter(w => w.status === WorkerStatus.approved).length === 0 && (
-        <div className="text-center py-24 bg-accent/20 rounded-2xl border border-border border-dashed">
-          <p className="text-lg text-muted-foreground">No professionals found matching your criteria.</p>
-          <Button variant="outline" className="mt-4" onClick={() => setServiceFilter("all")}>Clear filters</Button>
+          ))}
         </div>
-      )}
 
-      <div className="mt-16 bg-accent/30 rounded-3xl p-8 md:p-12 text-center border border-border">
-        <h2 className="text-2xl md:text-3xl font-bold mb-4">Ready to book a professional?</h2>
-        <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-          All our professionals are background-checked, trained, and rated by real customers across Addis Ababa.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href="/book">
-            <Button size="lg" className="shadow-sm">Book a Service</Button>
-          </Link>
-          <Link href="/plans">
-            <Button size="lg" variant="outline" className="bg-background">View Subscription Plans</Button>
-          </Link>
+        {!isLoading && approvedWorkers.length === 0 && (
+          <div className="text-center py-24 bg-accent/20 rounded-2xl border border-dashed border-border">
+            <p className="text-lg text-muted-foreground mb-4">No professionals found for this service.</p>
+            <Button variant="outline" onClick={() => setServiceFilter("all")}>Clear filter</Button>
+          </div>
+        )}
+
+        {/* ── CTA ── */}
+        <div className="mt-16 bg-gradient-to-br from-primary/5 to-primary/10 rounded-3xl p-8 md:p-12 text-center border border-primary/15">
+          <h2 className="text-2xl md:text-3xl font-bold mb-3">Ready to book a professional?</h2>
+          <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
+            All our professionals are background-checked and rated by real customers.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/book">
+              <Button size="lg" className="shadow-sm shadow-primary/20">Book a Service</Button>
+            </Link>
+            <Link href="/plans">
+              <Button size="lg" variant="outline" className="bg-background">View Subscription Plans</Button>
+            </Link>
+          </div>
         </div>
       </div>
     </div>

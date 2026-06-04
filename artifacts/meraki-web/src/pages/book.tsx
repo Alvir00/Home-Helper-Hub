@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -106,14 +106,10 @@ export default function Book() {
   });
 
   // Sync neighborhood + address from profile once the user data loads
-  const neighborhoodField = form.watch("neighborhood");
-  const addressDetailField = form.watch("addressDetail");
-  if (savedNeighborhood && !neighborhoodField) {
-    form.setValue("neighborhood", savedNeighborhood);
-  }
-  if (savedAddressDetail && !addressDetailField) {
-    form.setValue("addressDetail", savedAddressDetail);
-  }
+  useEffect(() => {
+    if (savedNeighborhood) form.setValue("neighborhood", savedNeighborhood);
+    if (savedAddressDetail) form.setValue("addressDetail", savedAddressDetail);
+  }, [savedNeighborhood, savedAddressDetail]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const selectedServiceId = form.watch("serviceId");
   const selectedWorkerId = form.watch("workerId");
