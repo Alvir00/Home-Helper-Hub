@@ -156,24 +156,44 @@ export default function Plans() {
         )}
       </div>
 
-      <div className="mt-24 text-center">
-        <h3 className="text-2xl font-bold mb-4">Frequently Asked Questions</h3>
-        <div className="grid md:grid-cols-2 gap-8 text-left max-w-4xl mx-auto mt-8">
-          <div>
-            <h4 className="font-bold text-lg mb-2">Can I cancel anytime?</h4>
-            <p className="text-muted-foreground">Yes, there are no long-term commitments. You can cancel your subscription at any time from your dashboard.</p>
-          </div>
-          <div>
-            <h4 className="font-bold text-lg mb-2">What if I need more cleanings?</h4>
-            <p className="text-muted-foreground">Any additional bookings beyond your plan's included amount will be charged at your plan's discounted rate.</p>
-          </div>
-          <div>
-            <h4 className="font-bold text-lg mb-2">Do unused bookings roll over?</h4>
-            <p className="text-muted-foreground">Unused bookings do not roll over to the next month to ensure our professionals have a predictable schedule.</p>
-          </div>
-          <div>
-            <h4 className="font-bold text-lg mb-2">Can I tip my professional?</h4>
-            <p className="text-muted-foreground">Absolutely! 100% of tips go directly to your service professional. You can tip in cash or through the app after service.</p>
+      {/* FAQ */}
+      <div className="mt-20 text-center">
+        <h3 className="text-2xl font-bold mb-8">Frequently Asked Questions</h3>
+        <div className="grid md:grid-cols-2 gap-6 text-left max-w-4xl mx-auto">
+          {[
+            { q: "Can I cancel anytime?", a: "Yes, there are no long-term commitments. You can cancel your subscription at any time from your dashboard." },
+            { q: "What if I need more cleanings?", a: "Any additional bookings beyond your plan's included amount will be charged at your plan's discounted rate." },
+            { q: "Do unused bookings roll over?", a: "Unused bookings do not roll over to the next month to ensure our professionals have a predictable schedule." },
+            { q: "Can I tip my professional?", a: "Absolutely! 100% of tips go directly to your service professional. You can tip in cash or through the app after service." },
+          ].map(({ q, a }) => (
+            <div key={q} className="bg-accent/40 rounded-2xl p-6 border border-border/50">
+              <h4 className="font-bold text-base mb-2">{q}</h4>
+              <p className="text-muted-foreground text-sm leading-relaxed">{a}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Bottom CTA */}
+      <div className="mt-16 bg-primary rounded-3xl p-8 md:p-12 text-center relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_30%_50%,white,transparent_70%)]" />
+        <div className="relative z-10">
+          <p className="text-primary-foreground/80 text-sm font-semibold uppercase tracking-wider mb-2">No commitment required</p>
+          <h3 className="text-3xl md:text-4xl font-bold text-white mb-3">Ready to get started?</h3>
+          <p className="text-white/75 text-base mb-8 max-w-md mx-auto">
+            Book your first service today. Cancel or change your plan anytime.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="/book">
+              <button className="inline-flex items-center justify-center h-12 px-8 rounded-lg bg-white text-primary font-semibold hover:bg-white/90 transition-colors text-base">
+                Book a Service
+              </button>
+            </a>
+            <a href="/register">
+              <button className="inline-flex items-center justify-center h-12 px-8 rounded-lg border-2 border-white/50 text-white font-semibold hover:border-white hover:bg-white/10 transition-colors text-base">
+                Create Free Account
+              </button>
+            </a>
           </div>
         </div>
       </div>

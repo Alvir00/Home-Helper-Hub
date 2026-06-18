@@ -219,30 +219,32 @@ export default function Home() {
 
             {[
               {
-                step: "01",
+                step: 1,
                 icon: Sparkles,
                 title: "Choose a Service",
                 desc: "Select what you need — cleaning, laundry, or a combined package.",
               },
               {
-                step: "02",
+                step: 2,
                 icon: Clock,
                 title: "Pick Your Time",
                 desc: "Schedule for today or next week. Flexible slots from 8am to 6pm.",
               },
               {
-                step: "03",
+                step: 3,
                 icon: Award,
                 title: "Enjoy Your Space",
                 desc: "Your vetted professional arrives on time and delivers perfection.",
               },
             ].map(({ step, icon: Icon, title, desc }) => (
               <div key={step} className="flex flex-col items-center text-center bg-background rounded-2xl p-8 border border-border shadow-sm hover:shadow-md transition-shadow">
-                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-5 relative">
-                  <Icon className="h-7 w-7 text-primary" />
-                  <span className="absolute -top-2 -right-2 w-6 h-6 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
+                <div className="flex flex-col items-center mb-5 gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center justify-center shadow-md">
                     {step}
-                  </span>
+                  </div>
+                  <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                    <Icon className="h-6 w-6 text-primary" />
+                  </div>
                 </div>
                 <h3 className="text-xl font-bold mb-3">{title}</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">{desc}</p>

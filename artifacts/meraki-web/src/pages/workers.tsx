@@ -59,7 +59,7 @@ export default function Workers() {
 
       {/* ── Workers Grid ── */}
       <div className="container mx-auto px-4 md:px-6 py-12 md:py-16">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {isLoading ? (
             Array(8).fill(0).map((_, i) => (
               <div key={i} className="rounded-2xl border border-border bg-card overflow-hidden">

@@ -95,3 +95,9 @@ id = "c8WdLw0xuLGNNCVpO-7ym"
 uri = "file://artifacts/meraki-video/public/audio/bg_music.mp3"
 type = "audio"
 title = "Meraki promo background music"
+
+[[outputs]]
+id = "Pfts4pt34uNHiY0j8sCEB"
+uri = "file://.local/outputs/Meraki-Pitch-Deck.pptx"
+type = "slides"
+title = "Meraki Pitch Deck.pptx"
