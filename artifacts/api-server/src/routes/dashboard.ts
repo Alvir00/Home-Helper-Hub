@@ -8,6 +8,7 @@ import {
   userSubscriptionsTable,
   subscriptionPlansTable,
   workerServicesTable,
+  usersTable,
 } from "@workspace/db";
 import { eq, and, gte, inArray, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
@@ -336,6 +337,101 @@ router.patch("/dashboard/admin/workers/:id/status", requireAuth, requireAdmin, a
     rating: worker.rating ?? null,
     totalReviews: worker.totalReviews,
     completedBookings: worker.completedBookings,
+    status: worker.status,
+    services: services.map((s) => ({
+      id: s.id,
+      name: s.name,
+      description: s.description,
+      pricePerHour: s.pricePerHour,
+      durationHours: s.durationHours,
+      category: s.category,
+      iconUrl: s.iconUrl ?? null,
+    })),
+    createdAt: worker.createdAt.toISOString(),
+  });
+});
+
+// Admin: list all users
+router.get("/dashboard/admin/users", requireAuth, requireAdmin, async (req, res) => {
+  const limit = parseInt(String(req.query.limit ?? "50"));
+  const offset = parseInt(String(req.query.offset ?? "0"));
+
+  const users = await db
+    .select()
+    .from(usersTable)
+    .orderBy(usersTable.createdAt)
+    .limit(limit)
+    .offset(offset);
+
+  const totalResult = await db.select({ count: sql<number>`count(*)` }).from(usersTable);
+  const total = Number(totalResult[0]?.count ?? 0);
+
+  const userIds = users.map((u) => u.id);
+  const bookingCounts =
+    userIds.length > 0
+      ? await db
+          .select({ userId: bookingsTable.userId, count: sql<number>`count(*)` })
+          .from(bookingsTable)
+          .where(inArray(bookingsTable.userId, userIds))
+          .groupBy(bookingsTable.userId)
+      : [];
+
+  const countMap = new Map(bookingCounts.map((b) => [b.userId, Number(b.count)]));
+
+  return res.json({
+    users: users.map((u) => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      phone: u.phone ?? null,
+      address: u.address ?? null,
+      role: u.role,
+      createdAt: u.createdAt.toISOString(),
+      bookingCount: countMap.get(u.id) ?? 0,
+    })),
+    total,
+  });
+});
+
+// Admin: create a worker directly
+router.post("/dashboard/admin/workers", requireAuth, requireAdmin, async (req, res) => {
+  const { name, bio, phone, photoUrl, serviceIds = [] } = req.body;
+
+  if (!name || typeof name !== "string") {
+    return res.status(400).json({ error: "bad_request", message: "Name is required" });
+  }
+
+  const [worker] = await db
+    .insert(workersTable)
+    .values({
+      name,
+      bio: bio || null,
+      phone: phone || null,
+      photoUrl: photoUrl || null,
+      status: "approved",
+    })
+    .returning();
+
+  if (Array.isArray(serviceIds) && serviceIds.length > 0) {
+    await db.insert(workerServicesTable).values(
+      serviceIds.map((sid: number) => ({ workerId: worker.id, serviceId: sid }))
+    );
+  }
+
+  const services =
+    Array.isArray(serviceIds) && serviceIds.length > 0
+      ? await db.select().from(servicesTable).where(inArray(servicesTable.id, serviceIds))
+      : [];
+
+  return res.status(201).json({
+    id: worker.id,
+    name: worker.name,
+    bio: worker.bio ?? null,
+    phone: worker.phone ?? null,
+    photoUrl: worker.photoUrl ?? null,
+    rating: null,
+    totalReviews: 0,
+    completedBookings: 0,
     status: worker.status,
     services: services.map((s) => ({
       id: s.id,

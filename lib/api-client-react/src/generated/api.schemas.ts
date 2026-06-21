@@ -117,6 +117,38 @@ export interface UpdateWorkerStatusRequest {
   status: WorkerStatus;
 }
 
+export interface CreateWorkerRequest {
+  name: string;
+  bio?: string;
+  phone?: string;
+  photoUrl?: string;
+  serviceIds?: number[];
+}
+
+export type AdminUserRole = typeof AdminUserRole[keyof typeof AdminUserRole];
+
+
+export const AdminUserRole = {
+  household: 'household',
+  admin: 'admin',
+} as const;
+
+export interface AdminUser {
+  id: number;
+  name: string;
+  email: string;
+  phone?: string | null;
+  address?: string | null;
+  role: AdminUserRole;
+  createdAt: string;
+  bookingCount: number;
+}
+
+export interface AdminUserListResponse {
+  users: AdminUser[];
+  total: number;
+}
+
 export type BookingStatus = typeof BookingStatus[keyof typeof BookingStatus];
 
 
@@ -267,6 +299,11 @@ offset?: number;
 
 export type ListAllBookingsParams = {
 status?: BookingStatus;
+limit?: number;
+offset?: number;
+};
+
+export type ListAllUsersParams = {
 limit?: number;
 offset?: number;
 };

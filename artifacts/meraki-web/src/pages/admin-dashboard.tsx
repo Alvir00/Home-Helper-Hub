@@ -1,4 +1,4 @@
-import { useGetAdminSummary, getGetAdminSummaryQueryKey } from "@workspace/api-client-react";
+import { useGetAdminSummary, getGetAdminSummaryQueryKey, useListAllUsers, getListAllUsersQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Users, Briefcase, CalendarClock, Banknote, Activity } from "lucide-react";
@@ -17,7 +17,10 @@ export default function AdminDashboard() {
           <h1 className="text-3xl font-bold tracking-tight mb-1">Admin Overview</h1>
           <p className="text-muted-foreground">Platform statistics and management</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Link href="/admin/users">
+            <Button variant="outline">Manage Users</Button>
+          </Link>
           <Link href="/admin/workers">
             <Button variant="outline">Manage Workers</Button>
           </Link>

@@ -21,6 +21,7 @@ import type {
 
 import type {
   AdminSummary,
+  AdminUserListResponse,
   AuthResponse,
   BadRequestResponse,
   Booking,
@@ -28,9 +29,11 @@ import type {
   CreateBookingRequest,
   CreateReviewRequest,
   CreateSubscriptionRequest,
+  CreateWorkerRequest,
   DashboardSummary,
   HealthStatus,
   ListAllBookingsParams,
+  ListAllUsersParams,
   ListAllWorkersParams,
   ListBookingsParams,
   ListWorkersParams,
@@ -1660,6 +1663,90 @@ export function useListAllBookings<TData = Awaited<ReturnType<typeof listAllBook
 
 
 
+export const getListAllUsersUrl = (params?: ListAllUsersParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/dashboard/admin/users?${stringifiedParams}` : `/api/dashboard/admin/users`
+}
+
+/**
+ * @summary List all registered users (admin view)
+ */
+export const listAllUsers = async (params?: ListAllUsersParams, options?: RequestInit): Promise<AdminUserListResponse> => {
+
+  return customFetch<AdminUserListResponse>(getListAllUsersUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAllUsersQueryKey = (params?: ListAllUsersParams,) => {
+    return [
+    `/api/dashboard/admin/users`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListAllUsersQueryOptions = <TData = Awaited<ReturnType<typeof listAllUsers>>, TError = ErrorType<unknown>>(params?: ListAllUsersParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAllUsers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAllUsersQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAllUsers>>> = ({ signal }) => listAllUsers(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAllUsers>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAllUsersQueryResult = NonNullable<Awaited<ReturnType<typeof listAllUsers>>>
+export type ListAllUsersQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all registered users (admin view)
+ */
+
+export function useListAllUsers<TData = Awaited<ReturnType<typeof listAllUsers>>, TError = ErrorType<unknown>>(
+ params?: ListAllUsersParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAllUsers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAllUsersQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
 export const getListAllWorkersUrl = (params?: ListAllWorkersParams,) => {
   const normalizedParams = new URLSearchParams();
 
@@ -1743,6 +1830,77 @@ export function useListAllWorkers<TData = Awaited<ReturnType<typeof listAllWorke
 
 
 
+
+export const getCreateWorkerUrl = () => {
+
+
+
+
+  return `/api/dashboard/admin/workers`
+}
+
+/**
+ * @summary Create a new worker directly (admin)
+ */
+export const createWorker = async (createWorkerRequest: CreateWorkerRequest, options?: RequestInit): Promise<Worker> => {
+
+  return customFetch<Worker>(getCreateWorkerUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createWorkerRequest,)
+  }
+);}
+
+
+
+
+export const getCreateWorkerMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWorker>>, TError,{data: BodyType<CreateWorkerRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createWorker>>, TError,{data: BodyType<CreateWorkerRequest>}, TContext> => {
+
+const mutationKey = ['createWorker'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createWorker>>, {data: BodyType<CreateWorkerRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createWorker(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateWorkerMutationResult = NonNullable<Awaited<ReturnType<typeof createWorker>>>
+    export type CreateWorkerMutationBody = BodyType<CreateWorkerRequest>
+    export type CreateWorkerMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a new worker directly (admin)
+ */
+export const useCreateWorker = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWorker>>, TError,{data: BodyType<CreateWorkerRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createWorker>>,
+        TError,
+        {data: BodyType<CreateWorkerRequest>},
+        TContext
+      > => {
+      return useMutation(getCreateWorkerMutationOptions(options));
+    }
 
 export const getUpdateWorkerStatusUrl = (id: number,) => {
 

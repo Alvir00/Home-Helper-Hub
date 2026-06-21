@@ -690,6 +690,32 @@ export const ListAllBookingsResponse = zod.object({
 
 
 /**
+ * @summary List all registered users (admin view)
+ */
+export const listAllUsersQueryLimitDefault = 50;
+export const listAllUsersQueryOffsetDefault = 0;
+
+export const ListAllUsersQueryParams = zod.object({
+  "limit": zod.coerce.number().default(listAllUsersQueryLimitDefault),
+  "offset": zod.coerce.number().default(listAllUsersQueryOffsetDefault)
+})
+
+export const ListAllUsersResponse = zod.object({
+  "users": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "email": zod.string(),
+  "phone": zod.string().nullish(),
+  "address": zod.string().nullish(),
+  "role": zod.enum(['household', 'admin']),
+  "createdAt": zod.coerce.date(),
+  "bookingCount": zod.number()
+})),
+  "total": zod.number()
+})
+
+
+/**
  * @summary List all workers for admin management
  */
 export const listAllWorkersQueryLimitDefault = 20;
@@ -724,6 +750,18 @@ export const ListAllWorkersResponse = zod.object({
   "createdAt": zod.coerce.date()
 })),
   "total": zod.number()
+})
+
+
+/**
+ * @summary Create a new worker directly (admin)
+ */
+export const CreateWorkerBody = zod.object({
+  "name": zod.string(),
+  "bio": zod.string().optional(),
+  "phone": zod.string().optional(),
+  "photoUrl": zod.string().optional(),
+  "serviceIds": zod.array(zod.number()).optional()
 })
 
 

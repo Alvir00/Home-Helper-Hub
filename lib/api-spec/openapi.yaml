@@ -456,6 +456,30 @@ paths:
               schema:
                 $ref: "#/components/schemas/BookingListResponse"
 
+  /dashboard/admin/users:
+    get:
+      operationId: listAllUsers
+      tags: [dashboard]
+      summary: List all registered users (admin view)
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: All users
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserListResponse"
+
   /dashboard/admin/workers:
     get:
       operationId: listAllWorkers
@@ -483,6 +507,24 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WorkerListResponse"
+
+    post:
+      operationId: createWorker
+      tags: [dashboard]
+      summary: Create a new worker directly (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWorkerRequest"
+      responses:
+        "201":
+          description: Created worker
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Worker"
 
   /dashboard/admin/workers/{id}/status:
     patch:
@@ -731,6 +773,68 @@ components:
           $ref: "#/components/schemas/WorkerStatus"
       required:
         - status
+
+    CreateWorkerRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        bio:
+          type: string
+        phone:
+          type: string
+        photoUrl:
+          type: string
+        serviceIds:
+          type: array
+          items:
+            type: integer
+      required:
+        - name
+
+    AdminUser:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+          nullable: true
+        address:
+          type: string
+          nullable: true
+        role:
+          type: string
+          enum: [household, admin]
+        createdAt:
+          type: string
+          format: date-time
+        bookingCount:
+          type: integer
+      required:
+        - id
+        - name
+        - email
+        - role
+        - createdAt
+        - bookingCount
+
+    AdminUserListResponse:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminUser"
+        total:
+          type: integer
+      required:
+        - users
+        - total
 
     # ── Booking Schemas ─────────────────────────────────────────────────────────
     BookingStatus:

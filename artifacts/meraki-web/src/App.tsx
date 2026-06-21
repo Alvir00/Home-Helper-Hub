@@ -23,6 +23,7 @@ import Dashboard from "@/pages/dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
 import AdminWorkers from "@/pages/admin-workers";
 import AdminBookings from "@/pages/admin-bookings";
+import AdminUsers from "@/pages/admin-users";
 import Profile from "@/pages/profile";
 import NotFound from "@/pages/not-found";
 
@@ -74,6 +75,9 @@ function Router() {
         </Route>
         <Route path="/admin/bookings">
           {() => <ProtectedRoute requireAdmin><AdminBookings /></ProtectedRoute>}
+        </Route>
+        <Route path="/admin/users">
+          {() => <ProtectedRoute requireAdmin><AdminUsers /></ProtectedRoute>}
         </Route>
 
         <Route component={NotFound} />

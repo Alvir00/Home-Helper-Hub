@@ -8,6 +8,9 @@
 
 export * from './adminSummary';
 export * from './adminSummaryBookingsByStatus';
+export * from './adminUser';
+export * from './adminUserListResponse';
+export * from './adminUserRole';
 export * from './authResponse';
 export * from './badRequestResponse';
 export * from './booking';
@@ -16,10 +19,12 @@ export * from './bookingStatus';
 export * from './createBookingRequest';
 export * from './createReviewRequest';
 export * from './createSubscriptionRequest';
+export * from './createWorkerRequest';
 export * from './dashboardSummary';
 export * from './errorResponse';
 export * from './healthStatus';
 export * from './listAllBookingsParams';
+export * from './listAllUsersParams';
 export * from './listAllWorkersParams';
 export * from './listBookingsParams';
 export * from './listWorkersParams';
