@@ -292,7 +292,7 @@ export default function AdminWorkers() {
                   <FormItem>
                     <FormLabel>Services *</FormLabel>
                     <div className="grid grid-cols-1 gap-2 mt-1">
-                      {servicesData?.services.map((service) => (
+                      {(servicesData?.services ?? []).map((service) => (
                         <label key={service.id} className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-accent/40 cursor-pointer transition-colors">
                           <Checkbox
                             checked={field.value.includes(service.id)}
