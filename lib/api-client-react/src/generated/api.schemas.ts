@@ -254,6 +254,41 @@ export interface DashboardSummary {
   recentBookings: Booking[];
 }
 
+export interface AdminRecentBooking {
+  id: number;
+  userName?: string | null;
+  serviceName?: string | null;
+  workerName?: string | null;
+  scheduledDate: string;
+  status: string;
+  totalPrice: number;
+  createdAt: string;
+}
+
+export interface AdminRecentUser {
+  id: number;
+  name: string;
+  email: string;
+  createdAt: string;
+}
+
+export interface AdminTopWorker {
+  id: number;
+  name: string;
+  photoUrl?: string | null;
+  rating?: number | null;
+  completedBookings: number;
+  totalReviews: number;
+}
+
+export interface UpdateWorkerInfoRequest {
+  name: string;
+  bio?: string | null;
+  phone?: string | null;
+  photoUrl?: string | null;
+  serviceIds?: number[];
+}
+
 export type AdminSummaryBookingsByStatus = {[key: string]: number};
 
 export interface AdminSummary {
@@ -264,6 +299,10 @@ export interface AdminSummary {
   activeSubscriptions: number;
   revenueThisMonth: number;
   bookingsByStatus: AdminSummaryBookingsByStatus;
+  totalUsers: number;
+  recentBookings: AdminRecentBooking[];
+  recentUsers: AdminRecentUser[];
+  topWorkers: AdminTopWorker[];
 }
 
 /**

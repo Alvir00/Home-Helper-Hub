@@ -10,7 +10,7 @@ import {
   workerServicesTable,
   usersTable,
 } from "@workspace/db";
-import { eq, and, gte, inArray, sql } from "drizzle-orm";
+import { eq, and, gte, inArray, sql, desc } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
 import { requireAdmin } from "../middlewares/auth";
 
@@ -188,6 +188,7 @@ router.get("/dashboard/admin/summary", requireAuth, requireAdmin, async (_req, r
     .select({ count: sql<number>`count(*)` })
     .from(userSubscriptionsTable)
     .where(eq(userSubscriptionsTable.status, "active"));
+  const [totalUsersResult] = await db.select({ count: sql<number>`count(*)` }).from(usersTable);
 
   const monthRevenue = await db
     .select({ total: sql<number>`sum(total_price)` })
@@ -204,6 +205,44 @@ router.get("/dashboard/admin/summary", requireAuth, requireAdmin, async (_req, r
     bookingsByStatus[row.status] = Number(row.count);
   }
 
+  const recentBookingsRaw = await db
+    .select({
+      id: bookingsTable.id,
+      userName: usersTable.name,
+      serviceName: servicesTable.name,
+      workerName: workersTable.name,
+      scheduledDate: bookingsTable.scheduledDate,
+      status: bookingsTable.status,
+      totalPrice: bookingsTable.totalPrice,
+      createdAt: bookingsTable.createdAt,
+    })
+    .from(bookingsTable)
+    .leftJoin(usersTable, eq(bookingsTable.userId, usersTable.id))
+    .leftJoin(servicesTable, eq(bookingsTable.serviceId, servicesTable.id))
+    .leftJoin(workersTable, eq(bookingsTable.workerId, workersTable.id))
+    .orderBy(desc(bookingsTable.createdAt))
+    .limit(8);
+
+  const recentUsersRaw = await db
+    .select({ id: usersTable.id, name: usersTable.name, email: usersTable.email, createdAt: usersTable.createdAt })
+    .from(usersTable)
+    .orderBy(desc(usersTable.createdAt))
+    .limit(5);
+
+  const topWorkersRaw = await db
+    .select({
+      id: workersTable.id,
+      name: workersTable.name,
+      photoUrl: workersTable.photoUrl,
+      rating: workersTable.rating,
+      completedBookings: workersTable.completedBookings,
+      totalReviews: workersTable.totalReviews,
+    })
+    .from(workersTable)
+    .where(eq(workersTable.status, "approved"))
+    .orderBy(desc(workersTable.completedBookings))
+    .limit(5);
+
   return res.json({
     totalWorkers: Number(totalWorkers?.count ?? 0),
     pendingWorkers: Number(pendingWorkers?.count ?? 0),
@@ -212,6 +251,31 @@ router.get("/dashboard/admin/summary", requireAuth, requireAdmin, async (_req, r
     activeSubscriptions: Number(activeSubs?.count ?? 0),
     revenueThisMonth: Number(monthRevenue[0]?.total ?? 0),
     bookingsByStatus,
+    totalUsers: Number(totalUsersResult?.count ?? 0),
+    recentBookings: recentBookingsRaw.map((b) => ({
+      id: b.id,
+      userName: b.userName ?? null,
+      serviceName: b.serviceName ?? null,
+      workerName: b.workerName ?? null,
+      scheduledDate: b.scheduledDate.toISOString(),
+      status: b.status,
+      totalPrice: b.totalPrice,
+      createdAt: b.createdAt.toISOString(),
+    })),
+    recentUsers: recentUsersRaw.map((u) => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      createdAt: u.createdAt.toISOString(),
+    })),
+    topWorkers: topWorkersRaw.map((w) => ({
+      id: w.id,
+      name: w.name,
+      photoUrl: w.photoUrl ?? null,
+      rating: w.rating ?? null,
+      completedBookings: w.completedBookings,
+      totalReviews: w.totalReviews,
+    })),
   });
 });
 
@@ -298,6 +362,60 @@ router.get("/dashboard/admin/workers", requireAuth, requireAdmin, async (req, re
   );
 
   return res.json({ workers: built, total: Number(total[0]?.count ?? 0) });
+});
+
+// Admin: update worker info (name, bio, phone, photo, services)
+router.patch("/dashboard/admin/workers/:id", requireAuth, requireAdmin, async (req, res) => {
+  const id = parseInt(String(req.params.id));
+  if (isNaN(id)) return res.status(400).json({ error: "bad_request", message: "Invalid id" });
+
+  const { name, bio, phone, photoUrl, serviceIds = [] } = req.body;
+  if (!name || typeof name !== "string") {
+    return res.status(400).json({ error: "bad_request", message: "Name is required" });
+  }
+
+  const [worker] = await db
+    .update(workersTable)
+    .set({ name, bio: bio || null, phone: phone || null, photoUrl: photoUrl || null })
+    .where(eq(workersTable.id, id))
+    .returning();
+
+  if (!worker) return res.status(404).json({ error: "not_found", message: "Worker not found" });
+
+  await db.delete(workerServicesTable).where(eq(workerServicesTable.workerId, id));
+  if (Array.isArray(serviceIds) && serviceIds.length > 0) {
+    await db.insert(workerServicesTable).values(
+      serviceIds.map((sid: number) => ({ workerId: worker.id, serviceId: sid }))
+    );
+  }
+
+  const updatedServiceIds: number[] = Array.isArray(serviceIds) ? serviceIds : [];
+  const services =
+    updatedServiceIds.length > 0
+      ? await db.select().from(servicesTable).where(inArray(servicesTable.id, updatedServiceIds))
+      : [];
+
+  return res.json({
+    id: worker.id,
+    name: worker.name,
+    bio: worker.bio ?? null,
+    phone: worker.phone ?? null,
+    photoUrl: worker.photoUrl ?? null,
+    rating: worker.rating ?? null,
+    totalReviews: worker.totalReviews,
+    completedBookings: worker.completedBookings,
+    status: worker.status,
+    services: services.map((s) => ({
+      id: s.id,
+      name: s.name,
+      description: s.description,
+      pricePerHour: s.pricePerHour,
+      durationHours: s.durationHours,
+      category: s.category,
+      iconUrl: s.iconUrl ?? null,
+    })),
+    createdAt: worker.createdAt.toISOString(),
+  });
 });
 
 // Admin: update worker status

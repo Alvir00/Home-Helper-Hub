@@ -526,6 +526,31 @@ paths:
               schema:
                 $ref: "#/components/schemas/Worker"
 
+  /dashboard/admin/workers/{id}:
+    patch:
+      operationId: updateWorkerInfo
+      tags: [dashboard]
+      summary: Update worker profile info (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateWorkerInfoRequest"
+      responses:
+        "200":
+          description: Updated worker
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Worker"
+
   /dashboard/admin/workers/{id}/status:
     patch:
       operationId: updateWorkerStatus
@@ -1052,6 +1077,96 @@ components:
         - bookingsThisMonth
         - recentBookings
 
+    AdminRecentBooking:
+      type: object
+      properties:
+        id:
+          type: integer
+        userName:
+          type: string
+          nullable: true
+        serviceName:
+          type: string
+          nullable: true
+        workerName:
+          type: string
+          nullable: true
+        scheduledDate:
+          type: string
+        status:
+          type: string
+        totalPrice:
+          type: number
+        createdAt:
+          type: string
+      required:
+        - id
+        - scheduledDate
+        - status
+        - totalPrice
+        - createdAt
+
+    AdminRecentUser:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - email
+        - createdAt
+
+    AdminTopWorker:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        photoUrl:
+          type: string
+          nullable: true
+        rating:
+          type: number
+          nullable: true
+        completedBookings:
+          type: integer
+        totalReviews:
+          type: integer
+      required:
+        - id
+        - name
+        - completedBookings
+        - totalReviews
+
+    UpdateWorkerInfoRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        bio:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        photoUrl:
+          type: string
+          nullable: true
+        serviceIds:
+          type: array
+          items:
+            type: integer
+      required:
+        - name
+
     AdminSummary:
       type: object
       properties:
@@ -1071,6 +1186,20 @@ components:
           type: object
           additionalProperties:
             type: integer
+        totalUsers:
+          type: integer
+        recentBookings:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminRecentBooking"
+        recentUsers:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminRecentUser"
+        topWorkers:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminTopWorker"
       required:
         - totalWorkers
         - pendingWorkers
@@ -1079,3 +1208,7 @@ components:
         - activeSubscriptions
         - revenueThisMonth
         - bookingsByStatus
+        - totalUsers
+        - recentBookings
+        - recentUsers
+        - topWorkers

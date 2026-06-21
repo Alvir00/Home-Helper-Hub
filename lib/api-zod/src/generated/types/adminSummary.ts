@@ -5,7 +5,10 @@
  * Meraki on-demand home help service API
  * OpenAPI spec version: 0.1.0
  */
+import type { AdminRecentBooking } from './adminRecentBooking';
+import type { AdminRecentUser } from './adminRecentUser';
 import type { AdminSummaryBookingsByStatus } from './adminSummaryBookingsByStatus';
+import type { AdminTopWorker } from './adminTopWorker';
 
 export interface AdminSummary {
   totalWorkers: number;
@@ -15,4 +18,8 @@ export interface AdminSummary {
   activeSubscriptions: number;
   revenueThisMonth: number;
   bookingsByStatus: AdminSummaryBookingsByStatus;
+  totalUsers: number;
+  recentBookings: AdminRecentBooking[];
+  recentUsers: AdminRecentUser[];
+  topWorkers: AdminTopWorker[];
 }

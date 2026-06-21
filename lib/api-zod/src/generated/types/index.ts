@@ -6,8 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './adminRecentBooking';
+export * from './adminRecentUser';
 export * from './adminSummary';
 export * from './adminSummaryBookingsByStatus';
+export * from './adminTopWorker';
 export * from './adminUser';
 export * from './adminUserListResponse';
 export * from './adminUserRole';
@@ -39,6 +42,7 @@ export * from './subscriptionPlan';
 export * from './unauthorizedResponse';
 export * from './updateBookingStatusRequest';
 export * from './updateUserRequest';
+export * from './updateWorkerInfoRequest';
 export * from './updateWorkerStatusRequest';
 export * from './user';
 export * from './userRole';

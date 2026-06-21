@@ -617,7 +617,32 @@ export const GetAdminSummaryResponse = zod.object({
   "bookingsToday": zod.number(),
   "activeSubscriptions": zod.number(),
   "revenueThisMonth": zod.number(),
-  "bookingsByStatus": zod.record(zod.string(), zod.number())
+  "bookingsByStatus": zod.record(zod.string(), zod.number()),
+  "totalUsers": zod.number(),
+  "recentBookings": zod.array(zod.object({
+  "id": zod.number(),
+  "userName": zod.string().nullish(),
+  "serviceName": zod.string().nullish(),
+  "workerName": zod.string().nullish(),
+  "scheduledDate": zod.string(),
+  "status": zod.string(),
+  "totalPrice": zod.number(),
+  "createdAt": zod.string()
+})),
+  "recentUsers": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "email": zod.string(),
+  "createdAt": zod.string()
+})),
+  "topWorkers": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "photoUrl": zod.string().nullish(),
+  "rating": zod.number().nullish(),
+  "completedBookings": zod.number(),
+  "totalReviews": zod.number()
+}))
 })
 
 
@@ -762,6 +787,44 @@ export const CreateWorkerBody = zod.object({
   "phone": zod.string().optional(),
   "photoUrl": zod.string().optional(),
   "serviceIds": zod.array(zod.number()).optional()
+})
+
+
+/**
+ * @summary Update worker profile info (admin)
+ */
+export const UpdateWorkerInfoParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateWorkerInfoBody = zod.object({
+  "name": zod.string(),
+  "bio": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "photoUrl": zod.string().nullish(),
+  "serviceIds": zod.array(zod.number()).optional()
+})
+
+export const UpdateWorkerInfoResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "bio": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "photoUrl": zod.string().nullish(),
+  "rating": zod.number().nullish(),
+  "totalReviews": zod.number(),
+  "completedBookings": zod.number(),
+  "status": zod.enum(['pending', 'approved', 'suspended']),
+  "services": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "pricePerHour": zod.number(),
+  "durationHours": zod.number(),
+  "category": zod.enum(['cleaning', 'laundry', 'combined']),
+  "iconUrl": zod.string().nullish()
+})),
+  "createdAt": zod.coerce.date()
 })
 
 

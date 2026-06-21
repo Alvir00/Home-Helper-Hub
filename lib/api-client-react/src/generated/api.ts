@@ -46,6 +46,7 @@ import type {
   UnauthorizedResponse,
   UpdateBookingStatusRequest,
   UpdateUserRequest,
+  UpdateWorkerInfoRequest,
   UpdateWorkerStatusRequest,
   User,
   UserSubscription,
@@ -1900,6 +1901,78 @@ export const useCreateWorker = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getCreateWorkerMutationOptions(options));
+    }
+
+export const getUpdateWorkerInfoUrl = (id: number,) => {
+
+
+
+
+  return `/api/dashboard/admin/workers/${id}`
+}
+
+/**
+ * @summary Update worker profile info (admin)
+ */
+export const updateWorkerInfo = async (id: number,
+    updateWorkerInfoRequest: UpdateWorkerInfoRequest, options?: RequestInit): Promise<Worker> => {
+
+  return customFetch<Worker>(getUpdateWorkerInfoUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateWorkerInfoRequest,)
+  }
+);}
+
+
+
+
+export const getUpdateWorkerInfoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateWorkerInfo>>, TError,{id: number;data: BodyType<UpdateWorkerInfoRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateWorkerInfo>>, TError,{id: number;data: BodyType<UpdateWorkerInfoRequest>}, TContext> => {
+
+const mutationKey = ['updateWorkerInfo'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateWorkerInfo>>, {id: number;data: BodyType<UpdateWorkerInfoRequest>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateWorkerInfo(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateWorkerInfoMutationResult = NonNullable<Awaited<ReturnType<typeof updateWorkerInfo>>>
+    export type UpdateWorkerInfoMutationBody = BodyType<UpdateWorkerInfoRequest>
+    export type UpdateWorkerInfoMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update worker profile info (admin)
+ */
+export const useUpdateWorkerInfo = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateWorkerInfo>>, TError,{id: number;data: BodyType<UpdateWorkerInfoRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateWorkerInfo>>,
+        TError,
+        {id: number;data: BodyType<UpdateWorkerInfoRequest>},
+        TContext
+      > => {
+      return useMutation(getUpdateWorkerInfoMutationOptions(options));
     }
 
 export const getUpdateWorkerStatusUrl = (id: number,) => {
