@@ -4,16 +4,14 @@ import { usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { tokenStore } from "../routes/auth";
 
-declare global {
-  namespace Express {
-    interface Request {
-      userId?: number;
-      userRole?: string;
-    }
-  }
-}
-
 export async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
+  // Already authenticated via Replit Auth session (set by authMiddleware)
+  if (req.userId) {
+    next();
+    return;
+  }
+
+  // Fall back to Bearer token auth (legacy email/password)
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith("Bearer ")) {
     res.status(401).json({ error: "unauthorized", message: "Missing or invalid token" });
@@ -50,6 +48,11 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction): v
 }
 
 export async function optionalAuth(req: Request, _res: Response, next: NextFunction): Promise<void> {
+  if (req.userId) {
+    next();
+    return;
+  }
+
   const authHeader = req.headers.authorization;
   if (authHeader?.startsWith("Bearer ")) {
     const token = authHeader.slice(7);

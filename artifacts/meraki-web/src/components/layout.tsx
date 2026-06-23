@@ -5,7 +5,7 @@ import { Sparkles, Menu, X, User as UserIcon } from "lucide-react";
 import { useState } from "react";
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const { user, isAuthenticated, isAdmin, logout } = useAuth();
+  const { user, isAuthenticated, isAdmin, logout, login } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [location] = useLocation();
 
@@ -49,10 +49,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </div>
             ) : (
               <div className="flex items-center gap-2 ml-4">
-                <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Log in</Link>
-                <Link href="/register">
-                  <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">Sign up</Button>
-                </Link>
+                <button onClick={login} className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Log in</button>
+                <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground" onClick={login}>Sign up</Button>
               </div>
             )}
             
@@ -94,12 +92,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
             ) : (
               <>
                 <div className="h-px bg-border my-2" />
-                <Link href="/login" onClick={closeMenu}>
-                  <Button variant="outline" className="w-full justify-center">Log in</Button>
-                </Link>
-                <Link href="/register" onClick={closeMenu}>
-                  <Button className="w-full justify-center">Sign up</Button>
-                </Link>
+                <Button variant="outline" className="w-full justify-center" onClick={() => { login(); closeMenu(); }}>Log in</Button>
+                <Button className="w-full justify-center" onClick={() => { login(); closeMenu(); }}>Sign up</Button>
               </>
             )}
             <Link href="/book" onClick={closeMenu}>
@@ -147,8 +141,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <div>
               <h3 className="font-semibold mb-4">Account</h3>
               <ul className="space-y-2">
-                <li><Link href="/login" className="text-sm text-muted-foreground hover:text-primary transition-colors">Log In</Link></li>
-                <li><Link href="/register" className="text-sm text-muted-foreground hover:text-primary transition-colors">Sign Up</Link></li>
+                <li><button onClick={login} className="text-sm text-muted-foreground hover:text-primary transition-colors">Log In</button></li>
                 <li><Link href="/bookings" className="text-sm text-muted-foreground hover:text-primary transition-colors">My Bookings</Link></li>
               </ul>
             </div>

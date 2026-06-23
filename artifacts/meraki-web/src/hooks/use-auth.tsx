@@ -1,84 +1,80 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { useLocation } from "wouter";
-import { User, setAuthTokenGetter } from "@workspace/api-client-react";
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { useAuth as useReplitAuth } from "@workspace/replit-auth-web";
+import type { AuthUser } from "@workspace/replit-auth-web";
+
+export interface AppUser {
+  id: number;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  neighborhood: string | null;
+  role: string;
+  profileImageUrl: string | null;
+}
 
 interface AuthContextType {
-  user: User | null;
-  token: string | null;
-  login: (token: string, user: User) => void;
+  user: AppUser | null;
+  login: () => void;
   logout: () => void;
   isAuthenticated: boolean;
   isAdmin: boolean;
   isLoading: boolean;
-  updateUser: (user: User) => void;
+  updateUser: (user: AppUser) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [, setLocation] = useLocation();
-
-  useEffect(() => {
-    try {
-      const storedToken = localStorage.getItem("meraki_token");
-      const storedUser = localStorage.getItem("meraki_user");
-      
-      if (storedToken && storedUser) {
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
-        setAuthTokenGetter(() => storedToken);
-      }
-    } catch (e) {
-      console.error("Failed to restore auth state", e);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const login = (newToken: string, newUser: User) => {
-    localStorage.setItem("meraki_token", newToken);
-    localStorage.setItem("meraki_user", JSON.stringify(newUser));
-    setToken(newToken);
-    setUser(newUser);
-    setAuthTokenGetter(() => newToken);
+function toAppUser(authUser: AuthUser | null | undefined): AppUser | null {
+  if (!authUser || authUser.dbId == null) return null;
+  return {
+    id: authUser.dbId,
+    name:
+      authUser.name ??
+      ([authUser.firstName, authUser.lastName].filter(Boolean).join(" ") ||
+        authUser.email ||
+        "User"),
+    email: authUser.email ?? null,
+    phone: authUser.phone ?? null,
+    address: authUser.address ?? null,
+    neighborhood: authUser.neighborhood ?? null,
+    role: authUser.role ?? "household",
+    profileImageUrl: authUser.profileImageUrl ?? null,
   };
-
-  const logout = () => {
-    localStorage.removeItem("meraki_token");
-    localStorage.removeItem("meraki_user");
-    setToken(null);
-    setUser(null);
-    setAuthTokenGetter(null);
-    setLocation("/login");
-  };
-
-  const updateUser = (updatedUser: User) => {
-    localStorage.setItem("meraki_user", JSON.stringify(updatedUser));
-    setUser(updatedUser);
-  };
-
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        token,
-        login,
-        logout,
-        isAuthenticated: !!token && !!user,
-        isAdmin: user?.role === "admin",
-        isLoading,
-        updateUser
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
 }
 
-export function useAuth() {
+function AuthStateProvider({ children }: { children: ReactNode }) {
+  const { user: authUser, isLoading, isAuthenticated, login, logout } =
+    useReplitAuth();
+  const [overrideUser, setOverrideUser] = useState<
+    AppUser | null | undefined
+  >(undefined);
+
+  const mappedUser = toAppUser(authUser);
+  const user = overrideUser !== undefined ? overrideUser : mappedUser;
+
+  useEffect(() => {
+    setOverrideUser(undefined);
+  }, [authUser?.id]);
+
+  const value: AuthContextType = {
+    user,
+    login,
+    logout,
+    isAuthenticated: isAuthenticated && user != null,
+    isAdmin: (user?.role ?? authUser?.role) === "admin",
+    isLoading,
+    updateUser: (u: AppUser) => setOverrideUser(u),
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  return <AuthStateProvider>{children}</AuthStateProvider>;
+}
+
+export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
