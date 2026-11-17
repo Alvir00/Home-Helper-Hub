@@ -245,3 +245,32 @@
     @apply font-sans antialiased bg-background text-foreground;
   }
 }
+
+@layer components {
+  /* Barely-there dotted texture for the mist bands — craft without noise */
+  .dot-texture {
+    background-image: radial-gradient(hsl(var(--primary) / 0.13) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* Quiet 3px lift with the signature soft shadow */
+  .hover-lift {
+    transition: transform 250ms ease, box-shadow 250ms ease, border-color 250ms ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgb(15 23 42 / 0.06);
+    border-color: hsl(var(--primary) / 0.4);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hover-lift {
+      transition: none;
+    }
+
+    .hover-lift:hover {
+      transform: none;
+    }
+  }
+}

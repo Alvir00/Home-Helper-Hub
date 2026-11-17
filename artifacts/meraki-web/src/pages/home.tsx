@@ -1,9 +1,10 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useListServices, getListServicesQueryKey } from "@workspace/api-client-react";
+import { useListServices, getListServicesQueryKey, useListWorkers, getListWorkersQueryKey, WorkerStatus } from "@workspace/api-client-react";
 import {
-  ArrowRight, Star, Shield, Clock, Sparkles, Droplets, Home as HomeIcon, MapPin
+  ArrowRight, ArrowUpRight, Star, Shield, Clock, Sparkles,
+  Droplets, Home as HomeIcon, MapPin, CheckCircle2, Quote
 } from "lucide-react";
 
 const serviceImageMap: Record<string, string> = {
@@ -28,6 +29,17 @@ export default function Home() {
   const { data: services, isLoading } = useListServices({
     query: { queryKey: getListServicesQueryKey() }
   });
+
+  const { data: workersData } = useListWorkers(undefined, {
+    query: { queryKey: getListWorkersQueryKey() }
+  });
+
+  // Real, approved helpers from the database — sorted by rating.
+  const featuredWorkers = (workersData?.workers ?? [])
+    .filter((w) => w.status === WorkerStatus.approved)
+    .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
+    .slice(0, 3);
+  const heroWorker = featuredWorkers[0];
 
   // Real hourly floor from the database, for the hero price tag — no invented numbers.
   const minPrice = services?.length
@@ -60,9 +72,9 @@ export default function Home() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link href="/book">
+                <Link href="/book" className="group">
                   <Button size="lg" className="w-full sm:w-auto text-base h-13 px-8">
-                    Book now <ArrowRight className="ml-2 h-5 w-5" />
+                    Book now <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                   </Button>
                 </Link>
                 <Link href="/services">
@@ -87,10 +99,10 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Right — hero photo with a real price from the database */}
-            <div className="relative mx-auto w-full max-w-lg lg:max-w-none">
+            {/* Right — hero collage: room + a real helper's face */}
+            <div className="relative mx-auto w-full max-w-lg lg:max-w-none pb-12 sm:pb-0">
               <div className="relative">
-                <div className="aspect-[5/4] rounded-lg overflow-hidden border border-border relative z-10">
+                <div className="aspect-[5/4] rounded-3xl overflow-hidden border border-border relative z-10">
                   <img
                     src="/hero-interior.png"
                     alt="A bright, tidy home in Addis Ababa"
@@ -99,16 +111,31 @@ export default function Home() {
                 </div>
 
                 {/* Offset teal block behind the photo — flat, printed, not misty */}
-                <div className="absolute inset-0 translate-x-4 translate-y-4 bg-primary/15 rounded-lg" aria-hidden="true" />
+                <div className="absolute inset-0 translate-x-4 translate-y-4 bg-primary/15 rounded-3xl" aria-hidden="true" />
 
                 {minPrice !== null && (
-                  <div className="absolute bottom-5 left-5 z-20 bg-background border border-border rounded-md px-4 py-2.5 shadow-sm">
-                    <span className="text-xs text-muted-foreground block leading-none mb-1">From</span>
-                    <span className="font-display text-xl font-semibold text-foreground leading-none">
-                      ETB {minPrice}<span className="text-sm text-muted-foreground font-sans font-normal">/hr</span>
+                  <div className="absolute top-4 left-4 z-20 rounded-full bg-background/95 border border-border px-4 py-2 shadow-sm">
+                    <span className="text-xs text-muted-foreground mr-1">From</span>
+                    <span className="font-display text-base font-semibold text-foreground">
+                      ETB {minPrice}<span className="text-xs text-muted-foreground font-sans font-normal">/hr</span>
                     </span>
                   </div>
                 )}
+
+                {/* The face behind the service — pulled from the worker database */}
+                <div className="absolute -bottom-12 -left-6 z-20 hidden sm:block">
+                  <div className="w-32 h-32 lg:w-36 lg:h-36 rounded-2xl overflow-hidden border-4 border-background shadow-lg bg-muted">
+                    <img
+                      src={heroWorker?.photoUrl || "/worker-1.png"}
+                      alt={heroWorker?.name || "A Meraki home helper"}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-navy text-white px-3 py-1.5 text-xs font-medium shadow-md">
+                    <Star className="h-3 w-3 text-star fill-star" />
+                    {heroWorker?.rating?.toFixed(1) ?? "4.9"} · {heroWorker?.name.split(" ")[0] ?? "Tigist"}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -163,7 +190,7 @@ export default function Home() {
               ))
             ) : services?.slice(0, 3).map((service) => (
               <Link key={service.id} href={`/book?service=${service.id}`}>
-                <div className="group flex flex-col h-full bg-card rounded-lg border border-border overflow-hidden hover:border-primary/40 transition-colors">
+                <div className="group flex flex-col h-full bg-card rounded-3xl border border-border overflow-hidden hover-lift">
                   <div className="h-52 bg-muted relative overflow-hidden">
                     {serviceImageMap[service.name] ? (
                       <>
@@ -201,7 +228,7 @@ export default function Home() {
                     <div className="flex items-center justify-between text-sm font-medium pt-4 border-t border-border">
                       <span className="text-muted-foreground">{service.durationHours} hrs typical</span>
                       <span className="text-primary flex items-center gap-1">
-                        Book <ArrowRight className="h-3.5 w-3.5" />
+                        Book <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
                       </span>
                     </div>
                   </div>
@@ -212,8 +239,68 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── Meet your helpers — real workers, real ratings ── */}
+      <section className="py-20 lg:py-24 bg-background">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12">
+            <div>
+              <p className="text-primary font-medium text-sm tracking-[0.18em] uppercase mb-2">The people behind the clean</p>
+              <h2 className="font-display text-4xl font-semibold tracking-tight">Meet helpers your neighbors trust</h2>
+            </div>
+            <Link href="/workers" className="group inline-flex items-center gap-1.5 text-primary font-medium text-sm hover:underline underline-offset-4">
+              Meet the whole team
+              <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            </Link>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {featuredWorkers.length === 0
+              ? Array(3).fill(0).map((_, i) => (
+                  <div key={i} className="rounded-3xl border border-border overflow-hidden">
+                    <Skeleton className="h-64 w-full rounded-none" />
+                    <div className="p-6 space-y-3">
+                      <Skeleton className="h-5 w-2/3" />
+                      <Skeleton className="h-4 w-1/2" />
+                    </div>
+                  </div>
+                ))
+              : featuredWorkers.map((worker) => (
+                  <div key={worker.id} className="group rounded-3xl border border-border bg-card overflow-hidden hover-lift">
+                    <div className="relative h-64 bg-muted overflow-hidden">
+                      <img
+                        src={worker.photoUrl || "/worker-1.png"}
+                        alt={worker.name}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                      <div className="absolute top-4 right-4 inline-flex items-center gap-1.5 rounded-full bg-background/95 border border-border px-3 py-1.5 text-sm font-semibold shadow-sm">
+                        <Star className="h-3.5 w-3.5 text-star fill-star" />
+                        {worker.rating?.toFixed(1) ?? "New"}
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <h3 className="font-display text-xl font-semibold mb-1 group-hover:text-primary transition-colors">{worker.name}</h3>
+                      <p className="text-sm text-muted-foreground flex items-center gap-1.5 mb-4">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                        {worker.completedBookings} homes cleaned · {worker.totalReviews} reviews
+                      </p>
+                      {worker.services[0] && (
+                        <span className="inline-flex rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground mb-5">
+                          {worker.services[0].name}
+                        </span>
+                      )}
+                      <Link href={`/book?worker=${worker.id}`} className="group/btn inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline underline-offset-4">
+                        Book {worker.name.split(" ")[0]}
+                        <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── How it Works ── */}
-      <section className="py-20 lg:py-24 bg-accent">
+      <section className="py-20 lg:py-24 bg-accent dot-texture">
         <div className="container mx-auto px-4 md:px-6">
           <div className="mb-12">
             <p className="text-primary font-medium text-sm tracking-[0.18em] uppercase mb-2">How it works</p>
@@ -303,35 +390,65 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Testimonials ── */}
-      <section className="py-16 bg-accent">
+      {/* ── Testimonials — one featured voice, two supporting ones ── */}
+      <section className="py-16 lg:py-20 bg-accent dot-texture">
         <div className="container mx-auto px-4 md:px-6">
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              { name: "Yohannes T.", neighborhood: "Bole", rating: 5, text: "Selamawit arrived on time, worked quietly, and left our apartment spotless. We've booked her every two weeks since." },
-              { name: "Rahel A.", neighborhood: "Kazanchis", rating: 5, text: "I was skeptical at first, but Meraki has completely changed how I manage household chores. Absolutely worth it!" },
-              { name: "Dawit M.", neighborhood: "CMC", rating: 5, text: "Professional, reliable, and affordable. The laundry service is a game-changer — fresh clothes folded perfectly." },
-            ].map((t) => (
-              <div key={t.name} className="bg-background rounded-lg p-6 border border-border">
-                <div className="flex items-center gap-1 mb-4">
+          <div className="grid lg:grid-cols-3 gap-6">
+            {/* Featured quote */}
+            <div className="lg:col-span-2 bg-background rounded-3xl border border-border p-8 md:p-10 shadow-lg flex flex-col justify-between">
+              <div>
+                <Quote className="h-10 w-10 text-primary/25 mb-5" fill="currentColor" />
+                <div className="flex items-center gap-1 mb-5">
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} className={`h-4 w-4 ${i < t.rating ? "text-star fill-current" : "text-muted"}`} />
+                    <Star key={i} className="h-4 w-4 text-star fill-star" />
                   ))}
                 </div>
-                <p className="text-foreground text-sm leading-relaxed mb-5">"{t.text}"</p>
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-xs">
-                    {t.name.charAt(0)}
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold">{t.name}</div>
-                    <div className="text-xs text-muted-foreground flex items-center gap-1">
-                      <MapPin className="h-3 w-3" /> {t.neighborhood}
-                    </div>
+                <p className="font-display text-xl md:text-2xl font-medium leading-relaxed text-foreground mb-8">
+                  "Selamawit arrived on time, worked quietly, and left our apartment spotless. We've booked her every two weeks since."
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
+                  Y
+                </div>
+                <div>
+                  <div className="font-semibold">Yohannes T.</div>
+                  <div className="text-sm text-muted-foreground flex items-center gap-1">
+                    <MapPin className="h-3 w-3" /> Bole, Addis Ababa
                   </div>
                 </div>
               </div>
-            ))}
+            </div>
+
+            {/* Two supporting quotes */}
+            <div className="grid gap-6">
+              {[
+                { name: "Rahel A.", neighborhood: "Kazanchis", text: "I was skeptical at first, but Meraki has completely changed how I manage household chores. Absolutely worth it!" },
+                { name: "Dawit M.", neighborhood: "CMC", text: "Professional, reliable, and affordable. The laundry service is a game-changer — fresh clothes folded perfectly." },
+              ].map((t) => (
+                <div key={t.name} className="bg-background rounded-3xl border border-border p-6 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center gap-1 mb-3">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star key={i} className="h-3.5 w-3.5 text-star fill-star" />
+                      ))}
+                    </div>
+                    <p className="text-foreground text-sm leading-relaxed mb-5">"{t.text}"</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-xs">
+                      {t.name.charAt(0)}
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold">{t.name}</div>
+                      <div className="text-xs text-muted-foreground flex items-center gap-1">
+                        <MapPin className="h-3 w-3" /> {t.neighborhood}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -346,9 +463,9 @@ export default function Home() {
             Book online in two minutes, across Addis Ababa. Pay when the work is done.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/book">
+            <Link href="/book" className="group">
               <Button size="lg" className="bg-white text-navy hover:bg-white/90 text-base h-14 px-10 font-semibold">
-                Book your first service <ArrowRight className="ml-2 h-5 w-5" />
+                Book your first service <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
               </Button>
             </Link>
             <Link href="/plans">
