@@ -160,7 +160,8 @@ export const GetMeResponse = zod.object({
 export const UpdateMeBody = zod.object({
   "name": zod.string().optional(),
   "phone": zod.string().optional(),
-  "address": zod.string().optional()
+  "address": zod.string().optional(),
+  "neighborhood": zod.string().optional()
 })
 
 export const UpdateMeResponse = zod.object({

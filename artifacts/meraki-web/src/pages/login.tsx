@@ -1,7 +1,10 @@
+import { useState, type FormEvent } from "react";
 import { Link } from "wouter";
-import { useAuth } from "@/hooks/use-auth";
-import { Sparkles, Star, ArrowRight } from "lucide-react";
+import { useLogin } from "@workspace/api-client-react";
+import { Sparkles, Star, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const TESTIMONIAL = {
   text: "Meraki has completely changed how I manage my home. I book a cleaner in under 2 minutes and the results are always spotless.",
@@ -17,7 +20,28 @@ const STATS = [
 ];
 
 export default function Login() {
-  const { login } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [formError, setFormError] = useState<string | null>(null);
+  const loginMutation = useLogin();
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setFormError(null);
+
+    loginMutation.mutate(
+      { data: { email: email.trim(), password } },
+      {
+        onSuccess: () => {
+          // Full navigation so the auth hook re-reads the new session cookie.
+          window.location.assign("/");
+        },
+        onError: (error) => {
+          setFormError(error.message || "Unable to sign in. Please try again.");
+        },
+      },
+    );
+  };
 
   return (
     <div className="flex min-h-[calc(100vh-64px)]">
@@ -49,7 +73,7 @@ export default function Login() {
           <div className="rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm p-5">
             <div className="flex gap-1 mb-3">
               {Array(5).fill(0).map((_, i) => (
-                <Star key={i} className="h-4 w-4 fill-amber-300 text-amber-300" />
+                <Star key={i} className="h-4 w-4 fill-star text-star" />
               ))}
             </div>
             <p className="text-white/90 text-sm leading-relaxed mb-4">
@@ -90,16 +114,74 @@ export default function Login() {
             Sign in to book your home services and manage your account.
           </p>
 
-          <Button
-            onClick={login}
-            className="w-full h-12 text-base flex items-center justify-center gap-2"
-          >
-            Continue to log in
-            <ArrowRight className="h-4 w-4" />
-          </Button>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                required
+                placeholder="you@example.com"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+              />
+            </div>
 
-          <p className="text-center text-xs text-muted-foreground mt-6">
-            New to Meraki? An account is created automatically when you first log in.
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <Link
+                  href="/forgot-password"
+                  className="text-xs font-medium text-primary hover:underline"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+              <Input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                placeholder="••••••••"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+              />
+            </div>
+
+            {formError && (
+              <p
+                role="alert"
+                className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2"
+              >
+                {formError}
+              </p>
+            )}
+
+            <Button
+              type="submit"
+              disabled={loginMutation.isPending}
+              className="w-full h-12 text-base flex items-center justify-center gap-2"
+            >
+              {loginMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Signing in…
+                </>
+              ) : (
+                <>
+                  Sign in
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
+            </Button>
+          </form>
+
+          <p className="text-center text-sm text-muted-foreground mt-6">
+            New to Meraki?{" "}
+            <Link href="/register" className="font-medium text-primary hover:underline">
+              Create an account
+            </Link>
           </p>
         </div>
       </div>

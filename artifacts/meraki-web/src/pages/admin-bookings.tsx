@@ -1,17 +1,40 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { useListAllBookings, getListAllBookingsQueryKey, BookingStatus } from "@workspace/api-client-react";
+import {
+  useListAllBookings,
+  getListAllBookingsQueryKey,
+  useUpdateBookingStatus,
+  BookingStatus,
+} from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft } from "lucide-react";
 
+/**
+ * Mirrors the transition rules enforced by the API (`lib/bookingPolicy.ts`).
+ * Households can only cancel; advancing a job is an admin action, so this page
+ * is the only place the status can move forward.
+ */
+const ADMIN_NEXT_STATUSES: Record<BookingStatus, BookingStatus[]> = {
+  [BookingStatus.pending]: [BookingStatus.confirmed, BookingStatus.cancelled],
+  [BookingStatus.confirmed]: [BookingStatus.in_progress, BookingStatus.cancelled],
+  [BookingStatus.in_progress]: [BookingStatus.completed, BookingStatus.cancelled],
+  [BookingStatus.completed]: [],
+  [BookingStatus.cancelled]: [],
+};
+
+const statusLabel = (status: BookingStatus) => status.replace("_", " ");
+
 export default function AdminBookings() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const statusFilterMap: Record<string, BookingStatus | undefined> = {
     pending: BookingStatus.pending,
@@ -27,11 +50,34 @@ export default function AdminBookings() {
     { query: { queryKey: getListAllBookingsQueryKey({ status: statusFilterMap[statusFilter] }) } }
   );
 
+  const updateStatusMutation = useUpdateBookingStatus();
+
+  const handleUpdateStatus = (id: number, status: BookingStatus) => {
+    updateStatusMutation.mutate(
+      { id, data: { status } },
+      {
+        onSuccess: () => {
+          toast({ title: `Booking marked ${statusLabel(status)}` });
+          queryClient.invalidateQueries({
+            queryKey: getListAllBookingsQueryKey({ status: statusFilterMap[statusFilter] }),
+          });
+        },
+        onError: (error) => {
+          toast({
+            variant: "destructive",
+            title: "Failed to update booking",
+            description: error.message,
+          });
+        },
+      }
+    );
+  };
+
   const getStatusColor = (status: BookingStatus) => {
     switch (status) {
       case BookingStatus.confirmed: return "border-blue-200 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400";
       case BookingStatus.completed: return "border-emerald-200 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400";
-      case BookingStatus.pending: return "border-amber-200 bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400";
+      case BookingStatus.pending: return "border-coral bg-coral text-coral-foreground";
       case BookingStatus.in_progress: return "border-purple-200 bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400";
       case BookingStatus.cancelled: return "border-rose-200 bg-rose-50 text-rose-700 dark:bg-rose-900/20 dark:text-rose-400";
       default: return "";
@@ -47,7 +93,7 @@ export default function AdminBookings() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">All Bookings</h1>
-          <p className="text-muted-foreground">Monitor platform booking activity.</p>
+          <p className="text-muted-foreground">Monitor and progress platform bookings.</p>
         </div>
         <div className="w-full sm:w-48">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -76,6 +122,7 @@ export default function AdminBookings() {
               <TableHead>Professional</TableHead>
               <TableHead>Price</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -88,29 +135,57 @@ export default function AdminBookings() {
                   <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-12" /></TableCell>
                   <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-24" /></TableCell>
                 </TableRow>
               ))
             ) : bookingsData?.bookings && bookingsData.bookings.length > 0 ? (
-              bookingsData.bookings.map((booking) => (
-                <TableRow key={booking.id}>
-                  <TableCell className="font-medium">#{booking.id}</TableCell>
-                  <TableCell>
-                    <div className="text-sm font-medium">{format(new Date(booking.scheduledDate), 'MMM d, yyyy')}</div>
-                    <div className="text-xs text-muted-foreground">{format(new Date(booking.scheduledDate), 'h:mm a')}</div>
-                  </TableCell>
-                  <TableCell>{booking.service.name}</TableCell>
-                  <TableCell>{booking.worker.name}</TableCell>
-                  <TableCell className="font-medium">ETB {booking.totalPrice}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={`capitalize ${getStatusColor(booking.status)}`}>
-                      {booking.status.replace('_', ' ')}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              ))
+              bookingsData.bookings.map((booking) => {
+                const nextStatuses = ADMIN_NEXT_STATUSES[booking.status];
+                return (
+                  <TableRow key={booking.id}>
+                    <TableCell className="font-medium">#{booking.id}</TableCell>
+                    <TableCell>
+                      <div className="text-sm font-medium">{format(new Date(booking.scheduledDate), 'MMM d, yyyy')}</div>
+                      <div className="text-xs text-muted-foreground">{format(new Date(booking.scheduledDate), 'h:mm a')}</div>
+                    </TableCell>
+                    <TableCell>{booking.service.name}</TableCell>
+                    <TableCell>{booking.worker.name}</TableCell>
+                    <TableCell className="font-medium">ETB {booking.totalPrice}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={`capitalize ${getStatusColor(booking.status)}`}>
+                        {statusLabel(booking.status)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {nextStatuses.length > 0 ? (
+                        <Select
+                          value={booking.status}
+                          onValueChange={(value) => handleUpdateStatus(booking.id, value as BookingStatus)}
+                        >
+                          <SelectTrigger className="h-8 w-[150px] capitalize">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={booking.status} disabled>
+                              {statusLabel(booking.status)} (current)
+                            </SelectItem>
+                            {nextStatuses.map((status) => (
+                              <SelectItem key={status} value={status} className="capitalize">
+                                {statusLabel(status)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
+                <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
                   No bookings found.
                 </TableCell>
               </TableRow>

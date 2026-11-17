@@ -16,7 +16,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useColors } from "@/hooks/useColors";
-import { useGetMe, useUpdateMe, useGetCurrentSubscription } from "@workspace/api-client-react";
+import {
+  getGetCurrentSubscriptionQueryKey,
+  getGetMeQueryKey,
+  useGetCurrentSubscription,
+  useGetMe,
+  useUpdateMe,
+} from "@workspace/api-client-react";
 
 function Avatar({ name, size = 72, bg }: { name: string; size?: number; bg: string }) {
   const initials = name
@@ -52,8 +58,12 @@ export default function ProfileScreen() {
   const [phone, setPhone] = useState(user?.phone ?? "");
   const [address, setAddress] = useState(user?.address ?? "");
 
-  const { data: me } = useGetMe({ query: { enabled: !!user } });
-  const { data: sub } = useGetCurrentSubscription({ query: { enabled: !!user } });
+  const { data: me } = useGetMe({
+    query: { enabled: !!user, queryKey: getGetMeQueryKey() },
+  });
+  const { data: sub } = useGetCurrentSubscription({
+    query: { enabled: !!user, queryKey: getGetCurrentSubscriptionQueryKey() },
+  });
   const updateMe = useUpdateMe();
 
   const topPad = insets.top + (Platform.OS === "web" ? 67 : 0);

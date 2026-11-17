@@ -69,7 +69,7 @@ export default function WorkerDetail() {
               
               <h1 className="text-2xl font-bold tracking-tight mb-2">{worker.name}</h1>
               
-              <div className="flex items-center justify-center gap-1 text-sm font-medium text-amber-500 mb-6 bg-amber-500/10 px-3 py-1 rounded-full">
+              <div className="flex items-center justify-center gap-1 text-sm font-medium text-star mb-6 bg-star/10 px-3 py-1 rounded-full">
                 <Star className="h-4 w-4 fill-current" />
                 <span>{worker.rating?.toFixed(1) || 'New'}</span>
                 <span className="text-muted-foreground ml-1">({worker.totalReviews} reviews)</span>
@@ -146,7 +146,7 @@ export default function WorkerDetail() {
                 {reviews.map((review) => (
                   <div key={review.id} className="p-6 rounded-2xl border border-border bg-card">
                     <div className="flex items-start justify-between mb-4">
-                      <div className="flex gap-1 text-amber-500">
+                      <div className="flex gap-1 text-star">
                         {Array.from({ length: 5 }).map((_, i) => (
                           <Star key={i} className={`h-4 w-4 ${i < review.rating ? "fill-current" : "text-muted stroke-[1.5px]"}`} />
                         ))}

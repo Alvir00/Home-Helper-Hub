@@ -842,6 +842,8 @@ components:
           type: string
         address:
           type: string
+        neighborhood:
+          type: string
 
     # ── Service Schemas ─────────────────────────────────────────────────────────
     Service:

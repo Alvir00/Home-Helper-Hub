@@ -11,11 +11,11 @@ import { eq } from "drizzle-orm";
 import {
   clearSession,
   getOidcConfig,
+  getSession,
   getSessionId,
   createSession,
   deleteSession,
-  SESSION_COOKIE,
-  SESSION_TTL,
+  setSessionCookie,
   ISSUER_URL,
   type SessionData,
 } from "../lib/auth";
@@ -29,16 +29,6 @@ function getOrigin(req: Request): string {
   const host =
     req.headers["x-forwarded-host"] || req.headers["host"] || "localhost";
   return `${proto}://${host}`;
-}
-
-function setSessionCookie(res: Response, sid: string) {
-  res.cookie(SESSION_COOKIE, sid, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: SESSION_TTL,
-  });
 }
 
 function setOidcCookie(res: Response, name: string, value: string) {
@@ -272,23 +262,33 @@ router.get("/callback", async (req: Request, res: Response) => {
   };
 
   const sid = await createSession(sessionData);
-  setSessionCookie(res, sid);
+  setSessionCookie(req, res, sid);
   res.redirect(returnTo);
 });
 
 router.get("/logout", async (req: Request, res: Response) => {
-  const config = await getOidcConfig();
-  const origin = getOrigin(req);
-
   const sid = getSessionId(req);
+  const session = sid ? await getSession(sid) : null;
   await clearSession(res, sid);
 
-  const endSessionUrl = oidc.buildEndSessionUrl(config, {
-    client_id: process.env.REPL_ID!,
-    post_logout_redirect_uri: origin,
-  });
+  // Only bounce through the identity provider when this session actually came
+  // from OIDC. Password sessions (and any deployment where the provider is not
+  // reachable) just return to the app.
+  if (session?.access_token) {
+    try {
+      const config = await getOidcConfig();
+      const endSessionUrl = oidc.buildEndSessionUrl(config, {
+        client_id: process.env.REPL_ID!,
+        post_logout_redirect_uri: getOrigin(req),
+      });
+      res.redirect(endSessionUrl.href);
+      return;
+    } catch {
+      // Fall through to a local logout below.
+    }
+  }
 
-  res.redirect(endSessionUrl.href);
+  res.redirect("/");
 });
 
 router.post(

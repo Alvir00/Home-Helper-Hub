@@ -15,7 +15,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { WorkerAvatar } from "@/components/WorkerCard";
 import { StarRating } from "@/components/StarRating";
 import { useColors } from "@/hooks/useColors";
-import { useGetWorker, useGetWorkerReviews, useListWorkers } from "@workspace/api-client-react";
+import {
+  getListWorkersQueryKey,
+  useGetWorker,
+  useGetWorkerReviews,
+  useListWorkers,
+} from "@workspace/api-client-react";
 
 const AVAILABILITY_DATES = Array.from({ length: 5 }, (_, i) => {
   const d = new Date();
@@ -38,13 +43,16 @@ export default function WorkerDetailScreen() {
 
   // Check availability for the next 5 days by querying workers with this service
   const [checkedDate, setCheckedDate] = useState<Date>(AVAILABILITY_DATES[0]);
-  const { data: availabilityData, isFetching: availChecking } = useListWorkers(
-    {
-      serviceId: worker?.services[0]?.id,
-      date: toISO(checkedDate),
+  const workerParams = {
+    serviceId: worker?.services[0]?.id,
+    date: toISO(checkedDate),
+  };
+  const { data: availabilityData, isFetching: availChecking } = useListWorkers(workerParams, {
+    query: {
+      enabled: !!worker && worker.services.length > 0,
+      queryKey: getListWorkersQueryKey(workerParams),
     },
-    { query: { enabled: !!worker && worker.services.length > 0 } }
-  );
+  });
 
   const isAvailableOnDate =
     availabilityData?.workers.some((w) => w.id === workerId) ?? false;

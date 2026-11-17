@@ -41,20 +41,28 @@ function ButtonGroupText({
   className,
   asChild = false,
   ...props
-}: React.ComponentProps<"div"> & {
+}: Omit<React.ComponentProps<"div">, "ref"> & {
   asChild?: boolean
 }) {
   const Comp = asChild ? Slot : "div"
 
-  return (
-    <Comp
-      className={cn(
-        "bg-muted shadow-xs flex items-center gap-2 rounded-md border px-4 text-sm font-medium [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none",
-        className
-      )}
-      {...props}
-    />
+  const className_ = cn(
+    "bg-muted shadow-xs flex items-center gap-2 rounded-md border px-4 text-sm font-medium [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none",
+    className
   )
+
+  if (asChild) {
+    // Radix Slot's bundled types target an older @types/react event shape;
+    // the cast bridges the ChangeEvent<T, E> generic added in React 19.2.
+    return (
+      <Slot
+        className={className_}
+        {...(props as unknown as React.ComponentProps<typeof Slot>)}
+      />
+    )
+  }
+
+  return <div className={className_} {...props} />
 }
 
 function ButtonGroupSeparator({

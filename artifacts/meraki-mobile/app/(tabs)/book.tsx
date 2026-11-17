@@ -19,6 +19,7 @@ import { WorkerCard } from "@/components/WorkerCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { useColors } from "@/hooks/useColors";
 import {
+  getListWorkersQueryKey,
   useCreateBooking,
   useListServices,
   useListWorkers,
@@ -58,12 +59,13 @@ export default function BookScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const { data: services, isLoading: servLoading } = useListServices();
-  const { data: workersData, isLoading: workersLoading } = useListWorkers(
+  const workerParams =
     step === 2 && selectedService && selectedDate
       ? { serviceId: selectedService.id, date: toISO(selectedDate) }
-      : undefined,
-    { query: { enabled: step === 2 && !!selectedService && !!selectedDate } }
-  );
+      : undefined;
+  const { data: workersData, isLoading: workersLoading } = useListWorkers(workerParams, {
+    query: { enabled: workerParams != null, queryKey: getListWorkersQueryKey(workerParams) },
+  });
 
   const createBooking = useCreateBooking();
   const dates = useMemo(() => getDates(7), []);

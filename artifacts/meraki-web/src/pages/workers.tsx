@@ -90,7 +90,7 @@ export default function Workers() {
 
                 {/* Rating chip */}
                 <div className="absolute top-3 right-3 bg-background/90 backdrop-blur-sm rounded-full px-2.5 py-1 flex items-center gap-1 text-xs font-semibold shadow-sm border border-border/50">
-                  <Star className="h-3 w-3 text-amber-500 fill-current" />
+                  <Star className="h-3 w-3 text-star fill-current" />
                   {worker.rating?.toFixed(1) || 'New'}
                 </div>
 

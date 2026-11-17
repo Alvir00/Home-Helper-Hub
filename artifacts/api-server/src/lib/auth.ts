@@ -11,11 +11,40 @@ export const SESSION_TTL = 7 * 24 * 60 * 60 * 1000;
 
 export interface SessionData {
   user: AuthUser;
-  access_token: string;
+  /**
+   * Omitted for email/password sessions, which have no upstream tokens to
+   * refresh — the session simply expires after SESSION_TTL.
+   */
+  access_token?: string;
   refresh_token?: string;
   expires_at?: number;
   dbUserId: number;
   dbUserRole: string;
+}
+
+/**
+ * Session cookie flags, shared by OIDC and password logins.
+ *
+ * `secure` is derived from the request rather than hardcoded so that plain-HTTP
+ * local stacks (docker compose on :8080) can still sign in, while anything
+ * behind a TLS proxy — where `x-forwarded-proto` is set and `trust proxy` is on
+ * — gets the Secure flag.
+ */
+export function setSessionCookie(
+  req: Request,
+  res: Response,
+  sid: string,
+): void {
+  const isSecure =
+    req.secure || req.headers["x-forwarded-proto"] === "https";
+
+  res.cookie(SESSION_COOKIE, sid, {
+    httpOnly: true,
+    secure: isSecure,
+    sameSite: "lax",
+    path: "/",
+    maxAge: SESSION_TTL,
+  });
 }
 
 let oidcConfig: client.Configuration | null = null;

@@ -1,0 +1,25 @@
+# Keep the build context small and reproducible.
+
+.git
+.gitignore
+.github
+
+# Never bake secrets or local env into an image
+.env
+.env.*
+!.env.example
+
+node_modules
+**/node_modules
+
+# Build output is produced inside the image
+**/dist
+**/.expo
+**/.expo-shared
+**/*.tsbuildinfo
+.local
+
+.vscode
+.idea
+.DS_Store
+Thumbs.db

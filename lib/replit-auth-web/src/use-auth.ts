@@ -11,6 +11,15 @@ interface AuthState {
   logout: () => void;
 }
 
+/**
+ * Session-cookie auth for the SPA.
+ *
+ * The API issues an httpOnly `sid` cookie on `/api/auth/login`, `/register`, and
+ * the OIDC callback; this hook only reads `/api/auth/user` to find out who the
+ * cookie belongs to. `replit-auth-web` is kept as the package name for
+ * compatibility, but nothing here depends on Replit — `login` now routes to the
+ * in-app sign-in page instead of redirecting through an external IdP.
+ */
 export function useAuth(): AuthState {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,11 +51,16 @@ export function useAuth(): AuthState {
   }, []);
 
   const login = useCallback(() => {
-    window.location.href = "/api/login?returnTo=/";
+    window.location.href = "/login";
   }, []);
 
   const logout = useCallback(() => {
-    window.location.href = "/api/logout";
+    fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include",
+    }).finally(() => {
+      window.location.href = "/";
+    });
   }, []);
 
   return {

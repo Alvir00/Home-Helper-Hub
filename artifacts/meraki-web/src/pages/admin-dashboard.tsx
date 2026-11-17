@@ -10,7 +10,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bar: string; icon: React.ReactNode }> = {
-  pending:   { label: "Pending",   color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300",  bar: "bg-amber-400",  icon: <Clock className="h-3.5 w-3.5" /> },
+  pending:   { label: "Pending",   color: "bg-coral text-coral-foreground", bar: "bg-coral", icon: <Clock className="h-3.5 w-3.5" /> },
   confirmed: { label: "Confirmed", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",     bar: "bg-blue-500",   icon: <CheckCircle2 className="h-3.5 w-3.5" /> },
   completed: { label: "Completed", color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300", bar: "bg-green-500",  icon: <CheckCircle2 className="h-3.5 w-3.5" /> },
   cancelled: { label: "Cancelled", color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",         bar: "bg-red-400",    icon: <XCircle className="h-3.5 w-3.5" /> },
@@ -105,7 +105,7 @@ export default function AdminDashboard() {
           title="Workers"
           value={summary?.totalWorkers}
           sub={summary?.pendingWorkers
-            ? <span className="text-amber-500 font-medium">{summary.pendingWorkers} pending approval</span>
+            ? <span className="text-star font-medium">{summary.pendingWorkers} pending approval</span>
             : "All approved"}
           icon={<UserCheck className="h-4 w-4 text-violet-600" />}
           accent="bg-violet-100 dark:bg-violet-900/30"
@@ -198,7 +198,7 @@ export default function AdminDashboard() {
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm truncate">{w.name}</p>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-0.5"><Star className="h-3 w-3 text-amber-400 fill-amber-400" />{w.rating?.toFixed(1) ?? "—"}</span>
+                        <span className="flex items-center gap-0.5"><Star className="h-3 w-3 text-star fill-star" />{w.rating?.toFixed(1) ?? "—"}</span>
                         <span>·</span>
                         <span>{w.completedBookings} done</span>
                       </div>

@@ -100,7 +100,7 @@ export default function BookingDetail() {
     switch (status) {
       case BookingStatus.confirmed: return "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800";
       case BookingStatus.completed: return "bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800";
-      case BookingStatus.pending: return "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800";
+      case BookingStatus.pending: return "bg-coral text-coral-foreground border-coral";
       case BookingStatus.in_progress: return "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800";
       case BookingStatus.cancelled: return "bg-rose-100 text-rose-800 border-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800";
       default: return "bg-gray-100 text-gray-800";
@@ -167,7 +167,7 @@ export default function BookingDetail() {
               <CardContent>
                 {booking.review ? (
                   <div className="bg-accent/20 p-6 rounded-xl border border-border">
-                    <div className="flex items-center gap-1 mb-3 text-amber-500">
+                    <div className="flex items-center gap-1 mb-3 text-star">
                       {Array.from({ length: 5 }).map((_, i) => (
                         <Star key={i} className={`h-5 w-5 ${i < booking.review!.rating ? "fill-current" : "text-muted stroke-[1.5px]"}`} />
                       ))}
@@ -194,7 +194,7 @@ export default function BookingDetail() {
                                   className="focus:outline-none"
                                 >
                                   <Star 
-                                    className={`h-8 w-8 transition-colors ${rating <= field.value ? "fill-amber-500 text-amber-500" : "text-muted hover:text-amber-300"}`} 
+                                    className={`h-8 w-8 transition-colors ${rating <= field.value ? "fill-star text-star" : "text-muted hover:text-star/60"}`} 
                                   />
                                 </button>
                               ))}
@@ -240,7 +240,7 @@ export default function BookingDetail() {
                   <AvatarFallback className="text-2xl bg-primary/10 text-primary">{booking.worker.name.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <h3 className="font-bold text-lg">{booking.worker.name}</h3>
-                <div className="flex items-center text-sm font-medium text-amber-500 mt-1 mb-4">
+                <div className="flex items-center text-sm font-medium text-star mt-1 mb-4">
                   <Star className="h-4 w-4 fill-current mr-1" />
                   {booking.worker.rating?.toFixed(1) || 'New'} 
                   <span className="text-muted-foreground ml-1">({booking.worker.totalReviews} reviews)</span>

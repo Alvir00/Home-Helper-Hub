@@ -16,7 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BookingCard } from "@/components/BookingCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { useColors } from "@/hooks/useColors";
-import { useListBookings, type Booking } from "@workspace/api-client-react";
+import { getListBookingsQueryKey, useListBookings, type Booking } from "@workspace/api-client-react";
 
 type Tab = "upcoming" | "past";
 
@@ -31,7 +31,7 @@ export default function BookingsScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const { data, isLoading, refetch } = useListBookings(undefined, {
-    query: { enabled: !!user },
+    query: { enabled: !!user, queryKey: getListBookingsQueryKey(undefined) },
   });
 
   const onRefresh = async () => {

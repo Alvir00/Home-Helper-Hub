@@ -1,42 +1,19 @@
-import { Request, Response, NextFunction } from "express";
-import { db } from "@workspace/db";
-import { usersTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
-import { tokenStore } from "../routes/auth";
+import type { Request, Response, NextFunction } from "express";
 
-export async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
-  // Already authenticated via Replit Auth session (set by authMiddleware)
+/**
+ * Authentication state is resolved once, by `authMiddleware`, from either the
+ * `sid` cookie or a `Bearer <sid>` header — both point at a row in the
+ * `sessions` table. These guards only inspect the result, so they stay
+ * independent of the transport and of how the session was created.
+ */
+
+export function requireAuth(req: Request, res: Response, next: NextFunction): void {
   if (req.userId) {
     next();
     return;
   }
 
-  // Fall back to Bearer token auth (legacy email/password)
-  const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith("Bearer ")) {
-    res.status(401).json({ error: "unauthorized", message: "Missing or invalid token" });
-    return;
-  }
-
-  const token = authHeader.slice(7);
-  const userId = tokenStore.get(token);
-
-  if (!userId) {
-    res.status(401).json({ error: "unauthorized", message: "Invalid or expired token" });
-    return;
-  }
-
-  const [user] = await db.select({ id: usersTable.id, role: usersTable.role })
-    .from(usersTable).where(eq(usersTable.id, userId)).limit(1);
-
-  if (!user) {
-    res.status(401).json({ error: "unauthorized", message: "User not found" });
-    return;
-  }
-
-  req.userId = user.id;
-  req.userRole = user.role;
-  next();
+  res.status(401).json({ error: "unauthorized", message: "Sign-in required" });
 }
 
 export function requireAdmin(req: Request, res: Response, next: NextFunction): void {
@@ -47,19 +24,11 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction): v
   next();
 }
 
-export async function optionalAuth(req: Request, _res: Response, next: NextFunction): Promise<void> {
-  if (req.userId) {
-    next();
-    return;
-  }
-
-  const authHeader = req.headers.authorization;
-  if (authHeader?.startsWith("Bearer ")) {
-    const token = authHeader.slice(7);
-    const userId = tokenStore.get(token);
-    if (userId) {
-      req.userId = userId;
-    }
-  }
+/**
+ * Public endpoints that personalise their output. Kept for parity with the
+ * other guards: `authMiddleware` has already populated `req.userId` when a
+ * valid session is present, so there is nothing else to resolve.
+ */
+export function optionalAuth(_req: Request, _res: Response, next: NextFunction): void {
   next();
 }

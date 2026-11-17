@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  # Any branch, so a feature branch gets verified without opening a PR.
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    name: Typecheck and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # This is the gate that a Windows checkout cannot run: the workspace ships
+      # linux-x64-only esbuild/rollup binaries, so typechecking has to happen on
+      # Linux (CI, WSL, or the Docker builder stage).
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Build API
+        run: pnpm --filter @workspace/api-server run build
+
+      - name: Build web
+        run: pnpm --filter @workspace/meraki-web run build
+        env:
+          PORT: "8080"
+          BASE_PATH: /
+          NODE_ENV: production

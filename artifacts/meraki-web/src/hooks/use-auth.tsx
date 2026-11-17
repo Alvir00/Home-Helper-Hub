@@ -8,9 +8,10 @@ export interface AppUser {
   email: string | null;
   phone: string | null;
   address: string | null;
-  neighborhood: string | null;
+  /** Optional so a plain `User` from the API can be passed to `updateUser`. */
+  neighborhood?: string | null;
   role: string;
-  profileImageUrl: string | null;
+  profileImageUrl?: string | null;
 }
 
 interface AuthContextType {
@@ -20,7 +21,11 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isAdmin: boolean;
   isLoading: boolean;
-  updateUser: (user: AppUser) => void;
+  /**
+   * Accepts a partial user so API responses (`User` from `/users/me`, which has
+   * no `profileImageUrl`) can be merged in without hand-building an AppUser.
+   */
+  updateUser: (changes: Partial<AppUser> & { id: number }) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -64,7 +69,12 @@ function AuthStateProvider({ children }: { children: ReactNode }) {
     isAuthenticated: isAuthenticated && user != null,
     isAdmin: (user?.role ?? authUser?.role) === "admin",
     isLoading,
-    updateUser: (u: AppUser) => setOverrideUser(u),
+    updateUser: (changes) =>
+      setOverrideUser((previous) => {
+        const base = previous ?? mappedUser;
+        if (!base) return base;
+        return { ...base, ...changes };
+      }),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

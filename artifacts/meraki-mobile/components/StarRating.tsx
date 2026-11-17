@@ -21,7 +21,7 @@ export function StarRating({
       {[1, 2, 3, 4, 5].map((i) => (
         <AntDesign
           key={i}
-          name={i <= rounded ? "star" : "staro"}
+          name="star"
           size={size}
           color={i <= rounded ? activeColor : inactiveColor}
         />

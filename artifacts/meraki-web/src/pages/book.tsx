@@ -301,7 +301,7 @@ export default function Book() {
                                 <AvatarFallback className="bg-primary/10 text-primary">{worker.name.charAt(0)}</AvatarFallback>
                               </Avatar>
                               <h3 className="font-bold">{worker.name}</h3>
-                              <div className="flex items-center text-xs font-medium text-amber-500 mt-1 mb-2">
+                              <div className="flex items-center text-xs font-medium text-star mt-1 mb-2">
                                 ★ {worker.rating?.toFixed(1) || 'New'} <span className="text-muted-foreground ml-1">({worker.totalReviews})</span>
                               </div>
                               <div className="mt-auto text-xs text-muted-foreground flex items-center">

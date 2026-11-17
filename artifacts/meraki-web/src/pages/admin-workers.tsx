@@ -170,10 +170,9 @@ export default function AdminWorkers() {
     { query: { queryKey: getListAllWorkersQueryKey({ status: statusFilterMap[activeTab] }) } }
   );
 
-  const { data: servicesData } = useListServices(
-    {},
-    { query: { queryKey: getListServicesQueryKey({}) } }
-  );
+  const { data: servicesData } = useListServices({
+    query: { queryKey: getListServicesQueryKey() },
+  });
 
   const updateStatusMutation = useUpdateWorkerStatus();
   const createWorkerMutation = useCreateWorker();
@@ -267,7 +266,7 @@ export default function AdminWorkers() {
     );
   };
 
-  const services = servicesData?.services ?? [];
+  const services = servicesData ?? [];
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -342,7 +341,7 @@ export default function AdminWorkers() {
                     <TableCell className="text-center">
                       {worker.rating != null ? (
                         <span className="inline-flex items-center gap-1 text-sm font-medium">
-                          <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
+                          <Star className="h-3.5 w-3.5 text-star fill-star" />
                           {worker.rating.toFixed(1)}
                         </span>
                       ) : (
@@ -358,7 +357,7 @@ export default function AdminWorkers() {
                     <TableCell>
                       <Badge variant="outline" className={
                         worker.status === WorkerStatus.approved ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400" :
-                        worker.status === WorkerStatus.pending  ? "border-amber-200 bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400" :
+                        worker.status === WorkerStatus.pending  ? "border-coral bg-coral text-coral-foreground" :
                         "border-rose-200 bg-rose-50 text-rose-700 dark:bg-rose-900/20 dark:text-rose-400"
                       }>
                         {worker.status}

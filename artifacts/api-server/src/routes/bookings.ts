@@ -8,11 +8,25 @@ import {
   workerServicesTable,
   usersTable,
 } from "@workspace/db";
-import { eq, and, inArray, sql } from "drizzle-orm";
+import { eq, and, inArray, sql, gte, lte } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
 import { CreateBookingBody, UpdateBookingStatusBody, ReviewBookingBody } from "@workspace/api-zod";
+import {
+  ACTIVE_BOOKING_STATUSES,
+  OVERLAP_SCAN_WINDOW_MS,
+  SCHEDULED_DATE_SKEW_MS,
+  allowedTransitions,
+  bookingEndMs,
+  canTransition,
+  householdMaySet,
+  intervalsOverlap,
+  type BookingStatusValue,
+} from "../lib/bookingPolicy";
 
 const router = Router();
+
+const MAX_ADDRESS_LENGTH = 500;
+const MAX_NOTES_LENGTH = 1000;
 
 async function buildBookingResponse(booking: typeof bookingsTable.$inferSelect) {
   const [worker] = await db.select().from(workersTable).where(eq(workersTable.id, booking.workerId)).limit(1);
@@ -118,12 +132,70 @@ router.post("/bookings", requireAuth, async (req, res) => {
 
   const { workerId, serviceId, scheduledDate, address, notes } = parsed.data;
 
+  const trimmedAddress = address.trim();
+  if (trimmedAddress.length < 5 || trimmedAddress.length > MAX_ADDRESS_LENGTH) {
+    return res.status(400).json({ error: "validation_error", message: `Address must be between 5 and ${MAX_ADDRESS_LENGTH} characters` });
+  }
+  const trimmedNotes = notes?.trim() ?? "";
+  if (trimmedNotes.length > MAX_NOTES_LENGTH) {
+    return res.status(400).json({ error: "validation_error", message: `Notes must be at most ${MAX_NOTES_LENGTH} characters` });
+  }
+  if (scheduledDate.getTime() < Date.now() - SCHEDULED_DATE_SKEW_MS) {
+    return res.status(400).json({ error: "invalid_scheduled_date", message: "Scheduled date must be in the future" });
+  }
+
   const [service] = await db.select().from(servicesTable).where(eq(servicesTable.id, serviceId)).limit(1);
   if (!service) return res.status(404).json({ error: "not_found", message: "Service not found" });
 
   const [worker] = await db.select().from(workersTable).where(eq(workersTable.id, workerId)).limit(1);
   if (!worker || worker.status !== "approved") {
     return res.status(400).json({ error: "worker_unavailable", message: "Worker not available" });
+  }
+
+  // A worker can only be booked for work they actually offer.
+  const [offering] = await db
+    .select({ workerId: workerServicesTable.workerId })
+    .from(workerServicesTable)
+    .where(and(eq(workerServicesTable.workerId, workerId), eq(workerServicesTable.serviceId, serviceId)))
+    .limit(1);
+  if (!offering) {
+    return res.status(400).json({ error: "worker_service_mismatch", message: "This worker does not offer the selected service" });
+  }
+
+  // Reject overlapping slots so a worker cannot be double-booked.
+  const requestedStart = scheduledDate.getTime();
+  const requestedEnd = bookingEndMs(scheduledDate, service.durationHours);
+  const nearby = await db
+    .select({ id: bookingsTable.id, serviceId: bookingsTable.serviceId, scheduledDate: bookingsTable.scheduledDate })
+    .from(bookingsTable)
+    .where(and(
+      eq(bookingsTable.workerId, workerId),
+      inArray(bookingsTable.status, ACTIVE_BOOKING_STATUSES),
+      gte(bookingsTable.scheduledDate, new Date(requestedStart - OVERLAP_SCAN_WINDOW_MS)),
+      lte(bookingsTable.scheduledDate, new Date(requestedEnd + OVERLAP_SCAN_WINDOW_MS)),
+    ));
+
+  if (nearby.length > 0) {
+    const nearbyServiceIds = [...new Set(nearby.map((b) => b.serviceId))];
+    const nearbyServices = await db
+      .select({ id: servicesTable.id, durationHours: servicesTable.durationHours })
+      .from(servicesTable)
+      .where(inArray(servicesTable.id, nearbyServiceIds));
+    const durationById = new Map<number, number>(
+      nearbyServices.map((s): [number, number] => [s.id, s.durationHours]),
+    );
+
+    const conflict = nearby.find((b) =>
+      intervalsOverlap(
+        requestedStart,
+        requestedEnd,
+        b.scheduledDate.getTime(),
+        bookingEndMs(b.scheduledDate, durationById.get(b.serviceId) ?? 0),
+      ),
+    );
+    if (conflict) {
+      return res.status(409).json({ error: "slot_unavailable", message: "This worker is already booked for that time. Please choose another slot." });
+    }
   }
 
   const totalPrice = service.pricePerHour * service.durationHours;
@@ -135,8 +207,8 @@ router.post("/bookings", requireAuth, async (req, res) => {
       workerId,
       serviceId,
       scheduledDate: new Date(scheduledDate),
-      address,
-      notes: notes ?? null,
+      address: trimmedAddress,
+      notes: trimmedNotes.length > 0 ? trimmedNotes : null,
       status: "pending",
       totalPrice,
     })
@@ -181,19 +253,40 @@ router.patch("/bookings/:id", requireAuth, async (req, res) => {
     .where(eq(usersTable.id, req.userId!))
     .limit(1);
 
-  if (existing.userId !== req.userId && requester?.role !== "admin") {
+  const isAdmin = requester?.role === "admin";
+  if (existing.userId !== req.userId && !isAdmin) {
     return res.status(403).json({ error: "forbidden", message: "Access denied" });
+  }
+
+  const nextStatus = parsed.data.status as BookingStatusValue;
+
+  // Households may only cancel; confirming, starting, and completing a job are
+  // operational decisions that must come from an administrator.
+  if (!isAdmin && !householdMaySet(nextStatus)) {
+    return res.status(403).json({ error: "admin_required", message: "Only an administrator can set this booking status" });
+  }
+
+  if (nextStatus === existing.status) {
+    return res.json(await buildBookingResponse(existing));
+  }
+
+  if (!canTransition(existing.status, nextStatus, isAdmin)) {
+    return res.status(409).json({
+      error: "invalid_transition",
+      message: `A ${existing.status} booking cannot be moved to ${nextStatus}`,
+      allowedStatuses: allowedTransitions(existing.status, isAdmin),
+    });
   }
 
   const [booking] = await db
     .update(bookingsTable)
-    .set({ status: parsed.data.status as any })
+    .set({ status: nextStatus as any })
     .where(eq(bookingsTable.id, id))
     .returning();
 
   if (!booking) return res.status(404).json({ error: "not_found", message: "Booking not found" });
 
-  if (parsed.data.status === "completed") {
+  if (nextStatus === "completed") {
     await db
       .update(workersTable)
       .set({ completedBookings: sql`${workersTable.completedBookings} + 1` })
@@ -221,6 +314,17 @@ router.post("/bookings/:id/review", requireAuth, async (req, res) => {
   if (!booking) return res.status(404).json({ error: "not_found", message: "Booking not found" });
   if (booking.status !== "completed") {
     return res.status(400).json({ error: "not_completed", message: "Booking must be completed to review" });
+  }
+
+  // `reviews.booking_id` is unique; check first so a second review is a clear
+  // 409 instead of a raw constraint violation surfacing as a 500.
+  const [existingReview] = await db
+    .select({ id: reviewsTable.id })
+    .from(reviewsTable)
+    .where(eq(reviewsTable.bookingId, id))
+    .limit(1);
+  if (existingReview) {
+    return res.status(409).json({ error: "review_exists", message: "This booking already has a review" });
   }
 
   const [review] = await db
