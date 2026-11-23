@@ -39,6 +39,15 @@
   --color-destructive-foreground: hsl(var(--destructive-foreground));
   --color-destructive-border: var(--destructive-border);
 
+  /* Booking-style brand palette */
+  --color-brand: hsl(var(--brand));
+  --color-brand-foreground: hsl(var(--brand-foreground));
+  --color-deal: hsl(var(--deal));
+  --color-deal-foreground: hsl(var(--deal-foreground));
+  --color-success: hsl(var(--success));
+  --color-star: hsl(var(--star));
+  --color-navy: hsl(var(--navy));
+
   --color-chart-1: hsl(var(--chart-1));
   --color-chart-2: hsl(var(--chart-2));
   --color-chart-3: hsl(var(--chart-3));
@@ -61,107 +70,91 @@
   --font-mono: var(--app-font-mono);
   --font-display: var(--app-font-display);
 
-  --color-star: hsl(var(--star));
-  --color-coral: hsl(var(--coral));
-  --color-coral-foreground: hsl(var(--coral-foreground));
-  --color-navy: hsl(var(--navy));
-  --color-aqua: hsl(var(--aqua));
-
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 4px);
+  --radius-xl: calc(var(--radius) + 8px);
 }
 
-/* LIGHT MODE */
+/* LIGHT — booking.com / trip.com inspired */
 :root {
-  --button-outline: rgba(0,0,0, .10);
-  --badge-outline: rgba(0,0,0, .05);
-
+  --button-outline: rgba(0,0,0, .12);
+  --badge-outline: rgba(0,0,0, .06);
   --opaque-button-border-intensity: -8;
-
-  --elevate-1: rgba(0,0,0, .03);
+  --elevate-1: rgba(0,0,0, .04);
   --elevate-2: rgba(0,0,0, .08);
 
-  /* Meraki design system: teal / mist / navy */
   --background: 0 0% 100%;
+  --foreground: 0 0% 10%;
+  --border: 0 0% 91%;
 
-  /* Navy text */
-  --foreground: 222 47% 11%;
-
-  /* Teal-tinted card border (#CCFBF1) */
-  --border: 167 85% 89%;
-
-  /* Card */
   --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
-  --card-border: 167 85% 89%;
+  --card-foreground: 0 0% 10%;
+  --card-border: 0 0% 91%;
 
-  /* Sidebar */
-  --sidebar: 167 77% 97%;
-  --sidebar-foreground: 222 47% 11%;
-  --sidebar-border: 167 85% 89%;
-  --sidebar-primary: 175 77% 26%;
+  --sidebar: 0 0% 98%;
+  --sidebar-foreground: 0 0% 10%;
+  --sidebar-border: 0 0% 91%;
+  --sidebar-primary: 205 100% 38%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 167 77% 97%;
-  --sidebar-accent-foreground: 175 77% 26%;
-  --sidebar-ring: 175 77% 26%;
+  --sidebar-accent: 0 0% 96%;
+  --sidebar-accent-foreground: 216 100% 29%;
+  --sidebar-ring: 205 100% 38%;
 
-  /* Popover */
   --popover: 0 0% 100%;
-  --popover-foreground: 222 47% 11%;
-  --popover-border: 167 85% 89%;
+  --popover-foreground: 0 0% 10%;
+  --popover-border: 0 0% 91%;
 
-  /* Primary — teal #0F766E (buttons/links, white text) */
-  --primary: 175 77% 26%;
+  /* Action blue (booking.com button blue) */
+  --primary: 205 100% 38%;
   --primary-foreground: 0 0% 100%;
 
-  /* Secondary (mist #F0FDFA) */
-  --secondary: 167 77% 97%;
-  --secondary-foreground: 222 47% 11%;
+  --secondary: 0 0% 96%;
+  --secondary-foreground: 0 0% 10%;
 
-  /* Muted */
-  --muted: 167 77% 97%;
-  --muted-foreground: 215 25% 27%;
+  --muted: 0 0% 96%;
+  --muted-foreground: 0 0% 35%;
 
-  /* Accent — mist */
-  --accent: 167 77% 97%;
-  --accent-foreground: 175 77% 26%;
+  --accent: 0 0% 96%;
+  --accent-foreground: 216 100% 29%;
 
-  /* Destructive */
-  --destructive: 0 84% 60%;
+  --destructive: 0 72% 45%;
   --destructive-foreground: 0 0% 100%;
 
-  --input: 167 85% 89%;
-  --ring: 174 80% 40%;
-  --chart-1: 175 77% 26%;
-  --chart-2: 174 80% 40%;
-  --chart-3: 172 66% 50%;
-  --chart-4: 222 47% 11%;
-  --chart-5: 351 95% 71%;
+  --input: 0 0% 85%;
+  --ring: 205 100% 38%;
 
-  /* Design-system extras */
-  --star: 26 90% 37%;          /* rating gold #B45309 */
-  --coral: 351 95% 71%;        /* accent coral #FB7185 — badges/status pills only */
-  --coral-foreground: 222 47% 11%;
-  --navy: 222 47% 11%;         /* CTA band + headings #0F172A */
-  --aqua: 172 66% 50%;         /* icons/borders on dark #2DD4BF */
+  /* Brand deep blue (header / footer / rating badges) */
+  --brand: 216 100% 29%;
+  --brand-foreground: 0 0% 100%;
+  /* Deal yellow (booking.com genius / savings) */
+  --deal: 44 99% 50%;
+  --deal-foreground: 0 0% 10%;
+  /* Reassurance green (free cancellation) */
+  --success: 124 100% 25%;
+  /* Review stars */
+  --star: 44 99% 50%;
+  --navy: 216 100% 29%;
 
-  --app-font-sans: 'Poppins', sans-serif;
+  --chart-1: 205 100% 38%;
+  --chart-2: 216 100% 29%;
+  --chart-3: 44 99% 50%;
+  --chart-4: 124 100% 25%;
+  --chart-5: 0 72% 45%;
+
+  --app-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --app-font-serif: Georgia, serif;
   --app-font-mono: Menlo, monospace;
-  /* Poppins everywhere; headlines use the same family at heavier weights. */
-  --app-font-display: 'Poppins', sans-serif;
-  /* 24px card radius */
-  --radius: 1.5rem;
+  --app-font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* Tight, functional radii like booking.com */
+  --radius: .25rem;
 
-  --shadow-sm: 0 1px 2px 0 rgb(15 23 42 / 0.04);
-  --shadow: 0 2px 8px 0 rgb(15 23 42 / 0.05);
-  --shadow-md: 0 4px 12px 0 rgb(15 23 42 / 0.05);
-  /* Signature soft shadow 0 8px 24px rgba(15,23,42,0.06) */
-  --shadow-lg: 0 8px 24px 0 rgb(15 23 42 / 0.06);
-  --shadow-xl: 0 12px 32px 0 rgb(15 23 42 / 0.1);
-  
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.06);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  --shadow-md: 0 2px 8px 0 rgb(0 0 0 / 0.08);
+  --shadow-lg: 0 4px 16px 0 rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 8px 24px 0 rgb(0 0 0 / 0.12);
+
   --tracking-normal: 0em;
   --spacing: 0.25rem;
 
@@ -175,65 +168,53 @@
 }
 
 .dark {
-  --button-outline: rgba(255,255,255, .10);
-  --badge-outline: rgba(255,255,255, .05);
-
+  --button-outline: rgba(255,255,255, .12);
+  --badge-outline: rgba(255,255,255, .06);
   --opaque-button-border-intensity: 9;
-
-  --elevate-1: rgba(255,255,255, .04);
-  --elevate-2: rgba(255,255,255, .09);
+  --elevate-1: rgba(255,255,255, .05);
+  --elevate-2: rgba(255,255,255, .1);
 
   --background: 220 15% 10%;
-  --foreground: 40 20% 95%;
-
-  --border: 220 15% 20%;
-
+  --foreground: 0 0% 96%;
+  --border: 220 15% 22%;
   --card: 220 15% 12%;
-  --card-foreground: 40 20% 95%;
-  --card-border: 220 15% 20%;
-
+  --card-foreground: 0 0% 96%;
+  --card-border: 220 15% 22%;
   --sidebar: 220 15% 10%;
-  --sidebar-foreground: 40 20% 95%;
-  --sidebar-border: 220 15% 20%;
-  --sidebar-primary: 172 66% 50%;
-  --sidebar-primary-foreground: 222 47% 11%;
+  --sidebar-foreground: 0 0% 96%;
+  --sidebar-border: 220 15% 22%;
+  --sidebar-primary: 205 100% 55%;
+  --sidebar-primary-foreground: 220 15% 10%;
   --sidebar-accent: 220 15% 18%;
-  --sidebar-accent-foreground: 40 20% 95%;
-  --sidebar-ring: 172 66% 50%;
-
+  --sidebar-accent-foreground: 0 0% 96%;
+  --sidebar-ring: 205 100% 55%;
   --popover: 220 15% 12%;
-  --popover-foreground: 40 20% 95%;
-  --popover-border: 220 15% 20%;
-
-  /* Aqua on dark backgrounds */
-  --primary: 172 66% 50%;
-  --primary-foreground: 222 47% 11%;
-
+  --popover-foreground: 0 0% 96%;
+  --popover-border: 220 15% 22%;
+  --primary: 205 100% 55%;
+  --primary-foreground: 220 15% 10%;
   --secondary: 220 15% 18%;
-  --secondary-foreground: 40 20% 95%;
-
+  --secondary-foreground: 0 0% 96%;
   --muted: 220 15% 18%;
   --muted-foreground: 220 10% 65%;
-
   --accent: 220 15% 18%;
-  --accent-foreground: 40 20% 95%;
-
+  --accent-foreground: 0 0% 96%;
   --destructive: 0 62% 45%;
   --destructive-foreground: 0 0% 100%;
-
-  --input: 220 15% 20%;
-  --ring: 172 66% 50%;
-  --chart-1: 172 66% 50%;
-  --chart-2: 30 40% 55%;
-  --chart-3: 45 50% 60%;
-  --chart-4: 200 40% 40%;
-  --chart-5: 330 30% 60%;
-
-  --star: 26 90% 45%;
-  --coral: 351 95% 71%;
-  --coral-foreground: 222 47% 11%;
-  --navy: 222 47% 11%;
-  --aqua: 172 66% 50%;
+  --input: 220 15% 22%;
+  --ring: 205 100% 55%;
+  --brand: 216 100% 40%;
+  --brand-foreground: 0 0% 100%;
+  --deal: 44 99% 50%;
+  --deal-foreground: 0 0% 10%;
+  --success: 124 60% 45%;
+  --star: 44 99% 50%;
+  --navy: 216 100% 40%;
+  --chart-1: 205 100% 55%;
+  --chart-2: 216 100% 50%;
+  --chart-3: 44 99% 50%;
+  --chart-4: 124 60% 45%;
+  --chart-5: 0 62% 45%;
 }
 
 @layer base {
@@ -247,30 +228,25 @@
 }
 
 @layer components {
-  /* Barely-there dotted texture for the mist bands — craft without noise */
-  .dot-texture {
-    background-image: radial-gradient(hsl(var(--primary) / 0.13) 1px, transparent 1px);
-    background-size: 24px 24px;
+  /* Booking-style numeric rating badge: deep blue square, white score */
+  .rating-badge {
+    @apply inline-flex items-center justify-center bg-brand text-brand-foreground font-bold rounded-md;
   }
 
-  /* Quiet 3px lift with the signature soft shadow */
+  /* Deal / savings pill: yellow with dark text */
+  .deal-badge {
+    @apply inline-flex items-center gap-1 bg-deal text-deal-foreground font-bold rounded-sm;
+  }
+
   .hover-lift {
-    transition: transform 250ms ease, box-shadow 250ms ease, border-color 250ms ease;
+    transition: box-shadow 150ms ease, border-color 150ms ease;
   }
-
   .hover-lift:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgb(15 23 42 / 0.06);
-    border-color: hsl(var(--primary) / 0.4);
+    box-shadow: 0 4px 16px 0 rgb(0 0 0 / 0.1);
+    border-color: hsl(var(--primary) / 0.5);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .hover-lift {
-      transition: none;
-    }
-
-    .hover-lift:hover {
-      transform: none;
-    }
+    .hover-lift { transition: none; }
   }
 }
