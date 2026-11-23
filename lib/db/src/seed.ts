@@ -5,11 +5,42 @@ import {
   workersTable,
   workerServicesTable,
   subscriptionPlansTable,
+  bookingsTable,
+  reviewsTable,
 } from "./schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 const BCRYPT_ROUNDS = 10;
+
+// Realistic demo reviews so helper profiles show genuine social proof.
+const REVIEW_COMMENTS: Record<string, Array<{ rating: number; text: string }>> = {
+  "Tigist Haile": [
+    { rating: 5, text: "Tigist arrived on time and left our apartment spotless. We've booked her every two weeks since." },
+    { rating: 5, text: "Incredible attention to detail — the kitchen has never looked better. Highly recommend." },
+    { rating: 4, text: "Very thorough and professional. Took a little longer than expected but the result was worth it." },
+  ],
+  "Mekdes Tadesse": [
+    { rating: 5, text: "Fast, thorough and always on time. My laundry comes back perfectly folded every visit." },
+    { rating: 4, text: "Great deep clean before our guests arrived. Would book again." },
+    { rating: 5, text: "Mekdes is reliable and friendly. The combined package is excellent value." },
+  ],
+  "Selamawit Girma": [
+    { rating: 5, text: "Selamawit worked quietly and efficiently. The bedroom deep clean was exactly what we needed." },
+    { rating: 5, text: "Our go-to helper for the combined home + laundry package. Never disappointed." },
+    { rating: 4, text: "Very good service and easy to schedule. Recommended for busy households." },
+  ],
+  "Hiwot Bekele": [
+    { rating: 5, text: "Hiwot transformed our kitchen — stovetop and cabinets look brand new." },
+    { rating: 4, text: "Friendly and professional. Great at organizing bedrooms too." },
+    { rating: 5, text: "Punctual, careful with our things, and a lovely person. Five stars." },
+  ],
+  "Birtukan Alemu": [
+    { rating: 5, text: "The ironing is immaculate. Birtukan treats every garment with care." },
+    { rating: 4, text: "Reliable laundry service, fair price, and always on schedule." },
+    { rating: 4, text: "Hardworking and detail-oriented. Our clothes have never looked better." },
+  ],
+};
 
 async function seed() {
   console.log("Seeding database...");
@@ -34,6 +65,23 @@ async function seed() {
     }
   }
   console.log(`  Services: ${insertedServices.length} ready`);
+
+  // Demo customers so seeded bookings/reviews have a real author.
+  const customerDefs = [
+    { name: "Yohannes T.", email: "yohannes@meraki.et" },
+    { name: "Rahel A.", email: "rahel@meraki.et" },
+    { name: "Dawit M.", email: "dawit@meraki.et" },
+  ];
+  const customers: Array<{ id: number }> = [];
+  for (const c of customerDefs) {
+    const ex = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.email, c.email)).limit(1);
+    if (ex.length > 0) {
+      customers.push(ex[0]);
+    } else {
+      const [u] = await db.insert(usersTable).values({ name: c.name, email: c.email }).returning({ id: usersTable.id });
+      customers.push(u);
+    }
+  }
 
   const workerDefs = [
     { name: "Tigist Haile", bio: "Experienced home cleaner with 5 years of service in Addis Ababa. Known for attention to detail and reliability.", phone: "+251911234567", photoUrl: "/worker-1.png", rating: 4.9, totalReviews: 47, completedBookings: 52, status: "approved" as const, services: ["Home Cleaning", "Kitchen Cleaning", "Combined Home & Laundry"] },
@@ -83,6 +131,33 @@ async function seed() {
         await db.insert(workerServicesTable).values({ workerId, serviceId: svc.id }).onConflictDoNothing();
       } else {
         await db.insert(workerServicesTable).values({ workerId, serviceId: svc.id }).onConflictDoNothing();
+      }
+    }
+
+    // Seed a few completed bookings + reviews (idempotent: skip if worker already has bookings).
+    const existingBookings = await db.select({ id: bookingsTable.id })
+      .from(bookingsTable).where(eq(bookingsTable.workerId, workerId)).limit(1);
+    if (existingBookings.length === 0) {
+      const svc = insertedServices.find((s) => s.name === w.services[0]) ?? insertedServices[0];
+      const comments = REVIEW_COMMENTS[w.name] ?? REVIEW_COMMENTS["Tigist Haile"];
+      for (let i = 0; i < comments.length; i++) {
+        const customer = customers[i % customers.length];
+        const scheduled = new Date(Date.now() - (7 + i * 9) * 86400000);
+        const [booking] = await db.insert(bookingsTable).values({
+          userId: customer.id,
+          workerId,
+          serviceId: svc.id,
+          scheduledDate: scheduled,
+          address: "Bole — Apt 4B",
+          notes: "seeded-demo",
+          status: "completed",
+          totalPrice: svc.pricePerHour * svc.durationHours,
+        }).returning({ id: bookingsTable.id });
+        await db.insert(reviewsTable).values({
+          bookingId: booking.id,
+          rating: comments[i].rating,
+          comment: comments[i].text,
+        }).onConflictDoNothing();
       }
     }
   }
