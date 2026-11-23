@@ -139,6 +139,7 @@ async function seed() {
       .from(bookingsTable).where(eq(bookingsTable.workerId, workerId)).limit(1);
     if (existingBookings.length === 0) {
       const svc = insertedServices.find((s) => s.name === w.services[0]) ?? insertedServices[0];
+      const svcDef = services.find((s) => s.name === svc.name) ?? services[0];
       const comments = REVIEW_COMMENTS[w.name] ?? REVIEW_COMMENTS["Tigist Haile"];
       for (let i = 0; i < comments.length; i++) {
         const customer = customers[i % customers.length];
@@ -151,7 +152,7 @@ async function seed() {
           address: "Bole — Apt 4B",
           notes: "seeded-demo",
           status: "completed",
-          totalPrice: svc.pricePerHour * svc.durationHours,
+          totalPrice: svcDef.pricePerHour * svcDef.durationHours,
         }).returning({ id: bookingsTable.id });
         await db.insert(reviewsTable).values({
           bookingId: booking.id,

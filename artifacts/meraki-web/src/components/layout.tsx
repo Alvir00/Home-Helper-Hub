@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Menu, X, User as UserIcon, HelpCircle, Globe } from "lucide-react";
+import { Sparkles, Menu, X, User as UserIcon, HelpCircle } from "lucide-react";
 import { useState } from "react";
 
 const nav = [
@@ -42,12 +42,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </nav>
 
             <div className="hidden md:flex items-center gap-2">
-              <span className="hidden lg:inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-sm text-white/90 hover:bg-white/10 cursor-default">
-                <Globe className="h-4 w-4" /> ETB
-              </span>
-              <Link href="/workers" className="hidden lg:inline-flex rounded-md px-3 py-2 text-sm font-medium text-white/90 hover:bg-white/10">
-                List your service
-              </Link>
               {isAuthenticated ? (
                 <>
                   <Link
