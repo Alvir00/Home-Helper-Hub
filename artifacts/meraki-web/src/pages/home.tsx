@@ -2,10 +2,13 @@ import { useState, type FormEvent } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import {
   useListServices, getListServicesQueryKey,
   useListWorkers, getListWorkersQueryKey,
@@ -13,7 +16,7 @@ import {
   WorkerStatus,
 } from "@workspace/api-client-react";
 import {
-  Search, ShieldCheck, CalendarCheck2, Wallet, Tag, ArrowRight, MapPin,
+  Search, ShieldCheck, CalendarCheck2, Wallet, Tag, ArrowRight, MapPin, CalendarIcon,
 } from "lucide-react";
 import {
   serviceImageMap, RatingRow, Price, DealBadge, VerifiedBadge, TopRatedBadge, PhotoTile,
@@ -30,7 +33,8 @@ function SearchWidget() {
   const { data: services } = useListServices({ query: { queryKey: getListServicesQueryKey() } });
   const [service, setService] = useState("");
   const [area, setArea] = useState("");
-  const [date, setDate] = useState("");
+  const [date, setDate] = useState<Date | undefined>(undefined);
+  const [dateOpen, setDateOpen] = useState(false);
   const [time, setTime] = useState("10:00");
 
   const submit = (e: FormEvent) => {
@@ -45,7 +49,7 @@ function SearchWidget() {
     <form onSubmit={submit} className="rounded-lg bg-background p-3 shadow-lg border border-border">
       <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr_1fr_0.8fr_auto] gap-2">
         <Select value={service} onValueChange={setService}>
-          <SelectTrigger className="h-12 bg-background" aria-label="Service">
+          <SelectTrigger className="h-12 bg-background text-foreground" aria-label="Service">
             <SelectValue placeholder="What do you need?" />
           </SelectTrigger>
           <SelectContent>
@@ -56,7 +60,7 @@ function SearchWidget() {
         </Select>
 
         <Select value={area} onValueChange={setArea}>
-          <SelectTrigger className="h-12 bg-background" aria-label="Neighborhood">
+          <SelectTrigger className="h-12 bg-background text-foreground" aria-label="Neighborhood">
             <SelectValue placeholder="Neighborhood" />
           </SelectTrigger>
           <SelectContent>
@@ -66,16 +70,34 @@ function SearchWidget() {
           </SelectContent>
         </Select>
 
-        <Input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="h-12 bg-background"
-          aria-label="Date"
-        />
+        <Popover open={dateOpen} onOpenChange={setDateOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              aria-label="Date"
+              className={cn(
+                "h-12 w-full justify-between bg-background font-normal",
+                !date && "text-muted-foreground"
+              )}
+            >
+              {date ? format(date, "MMM d, yyyy") : "Date"}
+              <CalendarIcon className="h-4 w-4 opacity-60" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={date}
+              onSelect={(d) => { setDate(d); setDateOpen(false); }}
+              disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
 
         <Select value={time} onValueChange={setTime}>
-          <SelectTrigger className="h-12 bg-background" aria-label="Time">
+          <SelectTrigger className="h-12 bg-background text-foreground" aria-label="Time">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
