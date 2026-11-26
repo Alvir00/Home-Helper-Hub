@@ -15,7 +15,7 @@ jobs:
     name: Typecheck and build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: pnpm/action-setup@v4
         with:
@@ -69,7 +69,7 @@ jobs:
       ADMIN_PASSWORD: ci-admin-password-123
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Build runtime image
         run: docker build --target runner -t meraki:ci .
