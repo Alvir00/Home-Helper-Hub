@@ -15,7 +15,14 @@ async function buildAll() {
   await rm(distDir, { recursive: true, force: true });
 
   await esbuild({
-    entryPoints: [path.resolve(artifactDir, "src/index.ts")],
+    entryPoints: {
+      index: path.resolve(artifactDir, "src/index.ts"),
+      // Shipped in the runtime image so any host can run migrations as a
+      // one-off job without a full toolchain.
+      migrate: path.resolve(artifactDir, "../../lib/db/src/migrate.ts"),
+      // One-off admin/demo bootstrap (`node api/seed.mjs`).
+      seed: path.resolve(artifactDir, "../../lib/db/src/seed.ts"),
+    },
     platform: "node",
     bundle: true,
     format: "esm",

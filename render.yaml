@@ -1,0 +1,47 @@
+# Render Blueprint — optional one-click setup.
+#
+# 1. Push this repository to GitHub.
+# 2. In Render: New → Blueprint → pick the repo.
+# 3. Fill in the secret environment variables when prompted (DATABASE_URL,
+#    APP_URL, RESEND_API_KEY...). See docs/DEPLOYMENT.md for the full list.
+# 4. The first successful deploy runs `node api/seed.mjs`, which creates the
+#    services, plans, and the admin account from ADMIN_EMAIL / ADMIN_PASSWORD.
+#    It is idempotent, so you can re-run it from the Render Shell at any time.
+#
+# If your Render plan does not support preDeployCommand, remove that line and
+# run `node api/migrate.mjs` once from the Render Shell before the first deploy.
+
+services:
+  - type: web
+    name: meraki
+    runtime: docker
+    plan: 0.5c-512mb
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/healthz
+    autoDeployTrigger: commit
+    preDeployCommand: node api/migrate.mjs
+    initialDeployHook: node api/seed.mjs
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: APP_URL
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      # Never seed demo helpers on a real launch.
+      - key: SEED_DEMO_DATA
+        value: "0"
+      - key: RESEND_API_KEY
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+      - key: BOOKING_NOTIFY_EMAIL
+        sync: false
+      - key: ERROR_WEBHOOK_URL
+        sync: false

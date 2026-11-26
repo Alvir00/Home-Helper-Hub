@@ -38,7 +38,15 @@ export default function Services() {
                 <div key={s.id} className="hover-lift flex flex-col rounded-lg border border-border bg-card overflow-hidden">
                   <div className="relative h-44 bg-muted overflow-hidden">
                     {serviceImageMap[s.name] ? (
-                      <img src={serviceImageMap[s.name]} alt={s.name} className="h-full w-full object-cover" />
+                      <img
+                        src={serviceImageMap[s.name]}
+                        alt={s.name}
+                        width={400}
+                        height={176}
+                        loading="lazy"
+                        decoding="async"
+                        className="h-full w-full object-cover"
+                      />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-primary/5">
                         {s.category === "laundry" ? <Shirt className="h-14 w-14 text-primary/40" />

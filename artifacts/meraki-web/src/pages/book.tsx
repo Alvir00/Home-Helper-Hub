@@ -221,8 +221,12 @@ export default function Book() {
                             }}
                           >
                             <img
-                              src={serviceImageMap[service.name] || "/service-cleaning.png"}
+                              src={serviceImageMap[service.name] || "/service-cleaning.jpg"}
                               alt={service.name}
+                              width={64}
+                              height={64}
+                              loading="lazy"
+                              decoding="async"
                               className="h-16 w-16 rounded-md object-cover shrink-0"
                             />
                             <div className="flex-1 min-w-0">
@@ -268,8 +272,12 @@ export default function Book() {
                               onClick={() => form.setValue("workerId", worker.id.toString())}
                             >
                               <img
-                                src={worker.photoUrl || "/worker-1.png"}
+                                src={worker.photoUrl || "/worker-1.jpg"}
                                 alt={worker.name}
+                                width={56}
+                                height={56}
+                                loading="lazy"
+                                decoding="async"
                                 className="h-14 w-14 rounded-md object-cover shrink-0"
                               />
                               <div className="flex-1 min-w-0">

@@ -32,6 +32,9 @@ function subscriptionToResponse(
     startDate: sub.startDate.toISOString(),
     endDate: sub.endDate.toISOString(),
     bookingsUsed: sub.bookingsUsed,
+    paymentStatus: sub.paymentStatus,
+    paymentMethod: sub.paymentMethod ?? null,
+    paidAt: sub.paidAt ? sub.paidAt.toISOString() : null,
   };
 }
 
@@ -64,6 +67,21 @@ router.get("/subscriptions/current", requireAuth, async (req, res) => {
 });
 
 router.post("/subscriptions", requireAuth, async (req, res) => {
+  // Self-service activation without a payment provider would hand out paid
+  // plans for free. Until Telebirr/Chapa is wired up, production refuses and
+  // asks the customer to pay manually; development stays frictionless.
+  const allowUnpaid =
+    process.env["ALLOW_UNPAID_SUBSCRIPTIONS"] === "1" ||
+    process.env.NODE_ENV !== "production";
+
+  if (!allowUnpaid) {
+    return res.status(503).json({
+      error: "payment_not_configured",
+      message:
+        "Online plan activation is not available yet. Please contact us to pay by Telebirr or cash.",
+    });
+  }
+
   const parsed = CreateSubscriptionBody.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: "validation_error", message: parsed.error.message });
@@ -100,6 +118,8 @@ router.post("/subscriptions", requireAuth, async (req, res) => {
       startDate: new Date(),
       endDate,
       bookingsUsed: 0,
+      paymentStatus: "unpaid",
+      paymentMethod: null,
     })
     .returning();
 

@@ -1,7 +1,8 @@
-import { pgTable, serial, integer, text, real, timestamp, pgEnum, boolean } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, text, real, timestamp, pgEnum, boolean, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
+import { paymentStatusEnum } from "./bookings";
 
 export const subscriptionStatusEnum = pgEnum("subscription_status", ["active", "cancelled", "expired"]);
 
@@ -24,7 +25,12 @@ export const userSubscriptionsTable = pgTable("user_subscriptions", {
   startDate: timestamp("start_date").notNull().defaultNow(),
   endDate: timestamp("end_date").notNull(),
   bookingsUsed: integer("bookings_used").notNull().default(0),
-});
+  paymentStatus: paymentStatusEnum("payment_status").notNull().default("unpaid"),
+  paymentMethod: text("payment_method"),
+  paidAt: timestamp("paid_at"),
+}, (table) => [
+  index("IDX_user_subscriptions_user_status").on(table.userId, table.status),
+]);
 
 export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlansTable).omit({ id: true });
 export const insertUserSubscriptionSchema = createInsertSchema(userSubscriptionsTable).omit({ id: true });

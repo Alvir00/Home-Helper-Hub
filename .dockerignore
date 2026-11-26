@@ -23,3 +23,8 @@ node_modules
 .idea
 .DS_Store
 Thumbs.db
+
+# Local-only scratch and data — never part of the image
+preview
+backups
+.pnpm-store

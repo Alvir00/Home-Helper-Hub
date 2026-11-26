@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from "express";
 import { db } from "@workspace/db";
-import { passwordResetTokensTable, usersTable } from "@workspace/db";
+import { passwordResetTokensTable, sessionsTable, usersTable } from "@workspace/db";
 import { and, eq, isNull, sql } from "drizzle-orm";
 import { createHash, randomBytes } from "crypto";
 import bcrypt from "bcryptjs";
@@ -138,6 +138,10 @@ router.post("/auth/register", registerLimiter, async (req, res) => {
   const { name, email, password, phone, address } = parsed.data;
   const normalisedEmail = email.trim().toLowerCase();
 
+  if (password.length > 200) {
+    return res.status(400).json({ error: "validation_error", message: "Password is too long" });
+  }
+
   const existing = await findByEmail(normalisedEmail);
   if (existing.length > 0) {
     return res.status(400).json({ error: "email_taken", message: "Email already registered" });
@@ -168,6 +172,12 @@ router.post("/auth/login", loginLimiter, async (req, res) => {
   }
 
   const { email, password } = parsed.data;
+
+  // Bound the input before bcrypt so an oversized body cannot burn CPU.
+  if (email.length > 320 || password.length > 200) {
+    return res.status(401).json({ error: "invalid_credentials", message: "Invalid email or password" });
+  }
+
   const [user] = await findByEmail(email);
 
   // Always run a bcrypt comparison, even for unknown emails or accounts that
@@ -240,6 +250,12 @@ router.post("/auth/reset-password", resetPasswordLimiter, async (req, res) => {
   if (typeof password !== "string" || password.length < 8) {
     return res.status(400).json({ error: "validation_error", message: "Password must be at least 8 characters" });
   }
+  if (password.length > 200) {
+    return res.status(400).json({ error: "validation_error", message: "Password is too long" });
+  }
+  if (token.length > 200) {
+    return res.status(400).json({ error: "invalid_token", message: "This reset link is invalid or has already been used." });
+  }
 
   const tokenHash = hashResetToken(token.trim());
   const [record] = await db
@@ -259,6 +275,10 @@ router.post("/auth/reset-password", resetPasswordLimiter, async (req, res) => {
 
   const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
   await db.update(usersTable).set({ passwordHash }).where(eq(usersTable.id, record.userId));
+
+  // A password reset must also invalidate every existing session: otherwise a
+  // stolen cookie keeps working even after the victim changes their password.
+  await db.delete(sessionsTable).where(eq(sessionsTable.userId, record.userId));
 
   // Single use: drop every outstanding link for the account.
   await db.delete(passwordResetTokensTable).where(eq(passwordResetTokensTable.userId, record.userId));

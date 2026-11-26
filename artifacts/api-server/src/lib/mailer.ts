@@ -10,7 +10,11 @@ interface MailMessage {
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
 
 function fromAddress(): string {
-  return process.env["MAIL_FROM"] ?? "Meraki <onboarding@resend.dev>";
+  // Compose passes an empty string when the variable is unset, which Resend
+  // rejects. Treat blank as unset so a key alone still sends from the sandbox
+  // sender until a verified domain is configured.
+  const configured = process.env["MAIL_FROM"]?.trim();
+  return configured || "Meraki <onboarding@resend.dev>";
 }
 
 function escapeHtml(value: string): string {
@@ -36,7 +40,7 @@ export async function sendMail(message: MailMessage): Promise<{ delivered: boole
 
   if (!apiKey) {
     logger.warn(
-      { to: message.to, subject: message.subject },
+      { subject: message.subject },
       "No RESEND_API_KEY configured; email was not sent",
     );
     return { delivered: false };
@@ -96,6 +100,151 @@ export function buildPasswordResetEmail(
       "<p>Use the link below to choose a new password. It expires in 1 hour.</p>",
       `<p><a href="${safeUrl}">Reset password</a></p>`,
       "<p>If you did not request this, you can ignore this email.</p>",
+    ].join(""),
+  };
+}
+
+interface BookingEmailDetails {
+  customerName: string;
+  workerName: string;
+  serviceName: string;
+  scheduledDate: Date;
+  address: string;
+  totalPrice: number;
+  bookingId: number;
+  appUrl: string;
+}
+
+/** Addis Ababa is UTC+3 year-round; formatting server-side must not depend on
+ * the host's timezone. */
+export function formatBookingTime(date: Date): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    dateStyle: "full",
+    timeStyle: "short",
+    timeZone: "Africa/Addis_Ababa",
+  }).format(date);
+}
+
+export function buildBookingConfirmationEmail(
+  details: BookingEmailDetails,
+): Pick<MailMessage, "subject" | "html" | "text"> {
+  const when = formatBookingTime(details.scheduledDate);
+  const link = details.appUrl
+    ? `${details.appUrl}/bookings/${details.bookingId}`
+    : "";
+  const rows = [
+    `Service: ${details.serviceName}`,
+    `Helper: ${details.workerName}`,
+    `When: ${when}`,
+    `Address: ${details.address}`,
+    `Total: ETB ${details.totalPrice.toLocaleString("en-US")} (pay after the job)`,
+  ];
+
+  return {
+    subject: `Booking confirmed — ${details.serviceName}`,
+    text: [
+      `Hi ${details.customerName},`,
+      "",
+      "Your booking is confirmed:",
+      ...rows,
+      "",
+      "You can view or cancel it from your Meraki dashboard.",
+      link,
+    ].join("\n"),
+    html: [
+      `<p>Hi ${escapeHtml(details.customerName)},</p>`,
+      "<p>Your booking is confirmed:</p>",
+      "<ul>",
+      ...rows.map((row) => `<li>${escapeHtml(row)}</li>`),
+      "</ul>",
+      link
+        ? `<p><a href="${escapeHtml(link)}">View booking</a></p>`
+        : "",
+      "<p>You can view or cancel it from your Meraki dashboard.</p>",
+    ].join(""),
+  };
+}
+
+/**
+ * Sent immediately after checkout, while the booking is still `pending`.
+ * Deliberately does not say "confirmed" — an admin confirms the helper later.
+ */
+export function buildBookingReceivedEmail(
+  details: BookingEmailDetails,
+): Pick<MailMessage, "subject" | "html" | "text"> {
+  const when = formatBookingTime(details.scheduledDate);
+  const rows = [
+    `Service: ${details.serviceName}`,
+    `Helper: ${details.workerName}`,
+    `When: ${when}`,
+    `Address: ${details.address}`,
+    `Total: ETB ${details.totalPrice.toLocaleString("en-US")} (pay after the job)`,
+  ];
+
+  return {
+    subject: `Booking received — ${details.serviceName}`,
+    text: [
+      `Hi ${details.customerName},`,
+      "",
+      "We have received your booking request:",
+      ...rows,
+      "",
+      "We will confirm the helper shortly. You can view or cancel it from your Meraki dashboard.",
+    ].join("\n"),
+    html: [
+      `<p>Hi ${escapeHtml(details.customerName)},</p>`,
+      "<p>We have received your booking request:</p>",
+      "<ul>",
+      ...rows.map((row) => `<li>${escapeHtml(row)}</li>`),
+      "</ul>",
+      "<p>We will confirm the helper shortly. You can view or cancel it from your Meraki dashboard.</p>",
+    ].join(""),
+  };
+}
+
+export function buildBookingCancelledEmail(
+  details: BookingEmailDetails,
+): Pick<MailMessage, "subject" | "html" | "text"> {
+  const when = formatBookingTime(details.scheduledDate);
+
+  return {
+    subject: `Booking cancelled — ${details.serviceName}`,
+    text: [
+      `Hi ${details.customerName},`,
+      "",
+      `Your ${details.serviceName} booking on ${when} has been cancelled.`,
+      "",
+      "If this was a mistake, you can book again at any time.",
+    ].join("\n"),
+    html: [
+      `<p>Hi ${escapeHtml(details.customerName)},</p>`,
+      `<p>Your ${escapeHtml(details.serviceName)} booking on ${escapeHtml(when)} has been cancelled.</p>`,
+      "<p>If this was a mistake, you can book again at any time.</p>",
+    ].join(""),
+  };
+}
+
+export function buildOperatorBookingEmail(
+  details: BookingEmailDetails & { customerPhone: string | null },
+): Pick<MailMessage, "subject" | "html" | "text"> {
+  const when = formatBookingTime(details.scheduledDate);
+  const lines = [
+    `Customer: ${details.customerName}${details.customerPhone ? ` (${details.customerPhone})` : ""}`,
+    `Service: ${details.serviceName}`,
+    `Helper: ${details.workerName}`,
+    `When: ${when}`,
+    `Address: ${details.address}`,
+    `Total: ETB ${details.totalPrice.toLocaleString("en-US")}`,
+  ];
+
+  return {
+    subject: `New booking #${details.bookingId} — ${details.serviceName}`,
+    text: ["A new booking was created:", "", ...lines].join("\n"),
+    html: [
+      `<p>A new booking was created:</p>`,
+      "<ul>",
+      ...lines.map((line) => `<li>${escapeHtml(line)}</li>`),
+      "</ul>",
     ].join(""),
   };
 }

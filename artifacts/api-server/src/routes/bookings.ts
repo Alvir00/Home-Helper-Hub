@@ -8,9 +8,18 @@ import {
   workerServicesTable,
   usersTable,
 } from "@workspace/db";
-import { eq, and, inArray, sql, gte, lte } from "drizzle-orm";
+import { eq, and, inArray, sql, gte, lte, desc } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
 import { CreateBookingBody, UpdateBookingStatusBody, ReviewBookingBody } from "@workspace/api-zod";
+import { rateLimit } from "../lib/rateLimit";
+import { parsePagination } from "../lib/pagination";
+import {
+  buildBookingCancelledEmail,
+  buildBookingConfirmationEmail,
+  buildBookingReceivedEmail,
+  buildOperatorBookingEmail,
+  sendMail,
+} from "../lib/mailer";
 import {
   ACTIVE_BOOKING_STATUSES,
   OVERLAP_SCAN_WINDOW_MS,
@@ -27,6 +36,16 @@ const router = Router();
 
 const MAX_ADDRESS_LENGTH = 500;
 const MAX_NOTES_LENGTH = 1000;
+const MAX_REVIEW_LENGTH = 2000;
+
+/** A household can create at most 20 bookings per hour. */
+const bookingLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  keyPrefix: "booking",
+  keyGenerator: (req) => String(req.userId ?? req.ip ?? "anonymous"),
+  message: "Too many booking attempts. Please try again later.",
+});
 
 async function buildBookingResponse(booking: typeof bookingsTable.$inferSelect) {
   const [worker] = await db.select().from(workersTable).where(eq(workersTable.id, booking.workerId)).limit(1);
@@ -86,6 +105,9 @@ async function buildBookingResponse(booking: typeof bookingsTable.$inferSelect) 
     notes: booking.notes ?? null,
     status: booking.status,
     totalPrice: booking.totalPrice,
+    paymentStatus: booking.paymentStatus,
+    paymentMethod: booking.paymentMethod ?? null,
+    paidAt: booking.paidAt ? booking.paidAt.toISOString() : null,
     review: review
       ? {
           id: review.id,
@@ -100,7 +122,8 @@ async function buildBookingResponse(booking: typeof bookingsTable.$inferSelect) 
 }
 
 router.get("/bookings", requireAuth, async (req, res) => {
-  const { status, limit = "20", offset = "0" } = req.query;
+  const { status } = req.query;
+  const { limit, offset } = parsePagination(req.query as Record<string, unknown>);
 
   const conditions = [eq(bookingsTable.userId, req.userId!)];
   if (status && typeof status === "string") {
@@ -111,9 +134,9 @@ router.get("/bookings", requireAuth, async (req, res) => {
     .select()
     .from(bookingsTable)
     .where(and(...conditions))
-    .limit(parseInt(limit as string))
-    .offset(parseInt(offset as string))
-    .orderBy(bookingsTable.createdAt);
+    .limit(limit)
+    .offset(offset)
+    .orderBy(desc(bookingsTable.createdAt));
 
   const total = await db
     .select({ count: sql<number>`count(*)` })
@@ -124,7 +147,7 @@ router.get("/bookings", requireAuth, async (req, res) => {
   return res.json({ bookings: built, total: Number(total[0]?.count ?? 0) });
 });
 
-router.post("/bookings", requireAuth, async (req, res) => {
+router.post("/bookings", requireAuth, bookingLimiter, async (req, res) => {
   const parsed = CreateBookingBody.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: "validation_error", message: parsed.error.message });
@@ -214,6 +237,38 @@ router.post("/bookings", requireAuth, async (req, res) => {
     })
     .returning();
 
+  // Confirmation emails are best-effort: a mail outage must never fail a
+  // booking that has already been written to the database.
+  const appUrl = (process.env["APP_URL"] ?? "").replace(/\/+$/, "");
+  const emailDetails = {
+    customerName: req.user?.name ?? "there",
+    workerName: worker.name,
+    serviceName: service.name,
+    scheduledDate: new Date(scheduledDate),
+    address: trimmedAddress,
+    totalPrice,
+    bookingId: booking.id,
+    appUrl,
+  };
+
+  if (req.user?.email) {
+    void sendMail({
+      to: req.user.email,
+      ...buildBookingReceivedEmail(emailDetails),
+    });
+  }
+
+  const operatorEmail = process.env["BOOKING_NOTIFY_EMAIL"];
+  if (operatorEmail) {
+    void sendMail({
+      to: operatorEmail,
+      ...buildOperatorBookingEmail({
+        ...emailDetails,
+        customerPhone: req.user?.phone ?? null,
+      }),
+    });
+  }
+
   return res.status(201).json(await buildBookingResponse(booking));
 });
 
@@ -293,7 +348,39 @@ router.patch("/bookings/:id", requireAuth, async (req, res) => {
       .where(eq(workersTable.id, booking.workerId));
   }
 
-  return res.json(await buildBookingResponse(booking));
+  const response = await buildBookingResponse(booking);
+
+  // Confirmation and cancellation are the two moments the customer needs mail.
+  if (nextStatus === "confirmed" || nextStatus === "cancelled") {
+    const [customer] = await db
+      .select({ email: usersTable.email, name: usersTable.name })
+      .from(usersTable)
+      .where(eq(usersTable.id, booking.userId))
+      .limit(1);
+
+    if (customer?.email && response.service) {
+      const appUrl = (process.env["APP_URL"] ?? "").replace(/\/+$/, "");
+      const details = {
+        customerName: customer.name,
+        workerName: response.worker?.name ?? "your helper",
+        serviceName: response.service.name,
+        scheduledDate: new Date(response.scheduledDate),
+        address: response.address,
+        totalPrice: response.totalPrice,
+        bookingId: response.id,
+        appUrl,
+      };
+
+      void sendMail({
+        to: customer.email,
+        ...(nextStatus === "confirmed"
+          ? buildBookingConfirmationEmail(details)
+          : buildBookingCancelledEmail(details)),
+      });
+    }
+  }
+
+  return res.json(response);
 });
 
 router.post("/bookings/:id/review", requireAuth, async (req, res) => {
@@ -316,6 +403,14 @@ router.post("/bookings/:id/review", requireAuth, async (req, res) => {
     return res.status(400).json({ error: "not_completed", message: "Booking must be completed to review" });
   }
 
+  const comment = parsed.data.comment?.trim() ?? null;
+  if (comment !== null && comment.length > MAX_REVIEW_LENGTH) {
+    return res.status(400).json({
+      error: "validation_error",
+      message: `Review must be at most ${MAX_REVIEW_LENGTH} characters`,
+    });
+  }
+
   // `reviews.booking_id` is unique; check first so a second review is a clear
   // 409 instead of a raw constraint violation surfacing as a 500.
   const [existingReview] = await db
@@ -329,7 +424,7 @@ router.post("/bookings/:id/review", requireAuth, async (req, res) => {
 
   const [review] = await db
     .insert(reviewsTable)
-    .values({ bookingId: id, rating: parsed.data.rating, comment: parsed.data.comment ?? null })
+    .values({ bookingId: id, rating: parsed.data.rating, comment })
     .returning();
 
   // Update worker rating

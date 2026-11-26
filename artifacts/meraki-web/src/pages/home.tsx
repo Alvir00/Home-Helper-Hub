@@ -190,7 +190,7 @@ export default function Home() {
               : services?.map((s) => (
                   <PhotoTile
                     key={s.id}
-                    image={serviceImageMap[s.name] || "/service-cleaning.png"}
+                    image={serviceImageMap[s.name] || "/service-cleaning.jpg"}
                     title={s.name}
                     subtitle={`from ETB ${s.pricePerHour}/hr`}
                     href={`/book?service=${s.id}`}
@@ -222,8 +222,12 @@ export default function Home() {
                     <div key={w.id} className="hover-lift grid grid-cols-1 sm:grid-cols-[auto_1fr_auto] gap-4 rounded-lg border border-border bg-card p-4">
                       <Link href={`/workers/${w.id}`} className="block">
                         <img
-                          src={w.photoUrl || "/worker-1.png"}
+                          src={w.photoUrl || "/worker-1.jpg"}
                           alt={w.name}
+                          width={160}
+                          height={160}
+                          loading="lazy"
+                          decoding="async"
                           className="h-36 w-36 sm:h-40 sm:w-40 rounded-lg object-cover"
                         />
                       </Link>
@@ -269,12 +273,12 @@ export default function Home() {
           <h2 className="text-xl md:text-2xl font-bold tracking-tight mb-1">Popular areas in Addis Ababa</h2>
           <p className="text-sm text-muted-foreground mb-5">Helpers available across the city.</p>
           <div className="flex gap-4 overflow-x-auto pb-2">
-            <PhotoTile image="/hero-interior.png" title="Bole" subtitle="Cleaning · Laundry" href="/workers" />
-            <PhotoTile image="/service-cleaning.png" title="Kazanchis" subtitle="Cleaning · Laundry" href="/workers" />
-            <PhotoTile image="/service-bedroom.png" title="CMC" subtitle="Cleaning · Laundry" href="/workers" />
-            <PhotoTile image="/service-kitchen.png" title="Old Airport" subtitle="Cleaning · Laundry" href="/workers" />
-            <PhotoTile image="/service-laundry.png" title="Sarbet" subtitle="Cleaning · Laundry" href="/workers" />
-            <PhotoTile image="/service-combined.png" title="Ayat" subtitle="Cleaning · Laundry" href="/workers" />
+            <PhotoTile image="/hero-interior.jpg" title="Bole" subtitle="Cleaning · Laundry" href="/workers" />
+            <PhotoTile image="/service-cleaning.jpg" title="Kazanchis" subtitle="Cleaning · Laundry" href="/workers" />
+            <PhotoTile image="/service-bedroom.jpg" title="CMC" subtitle="Cleaning · Laundry" href="/workers" />
+            <PhotoTile image="/service-kitchen.jpg" title="Old Airport" subtitle="Cleaning · Laundry" href="/workers" />
+            <PhotoTile image="/service-laundry.jpg" title="Sarbet" subtitle="Cleaning · Laundry" href="/workers" />
+            <PhotoTile image="/service-combined.jpg" title="Ayat" subtitle="Cleaning · Laundry" href="/workers" />
           </div>
         </div>
       </section>

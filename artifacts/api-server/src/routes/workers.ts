@@ -7,7 +7,8 @@ import {
   reviewsTable,
   bookingsTable,
 } from "@workspace/db";
-import { eq, and, inArray, sql } from "drizzle-orm";
+import { eq, and, inArray, sql, desc } from "drizzle-orm";
+import { parsePagination } from "../lib/pagination";
 
 const router = Router();
 
@@ -47,7 +48,8 @@ async function buildWorkerResponse(worker: typeof workersTable.$inferSelect) {
 }
 
 router.get("/workers", async (req, res) => {
-  const { serviceId, limit = "20", offset = "0" } = req.query;
+  const { serviceId } = req.query;
+  const { limit, offset } = parsePagination(req.query as Record<string, unknown>);
 
   let workerIds: number[] | null = null;
 
@@ -62,8 +64,6 @@ router.get("/workers", async (req, res) => {
     }
   }
 
-  let query = db.select().from(workersTable).where(eq(workersTable.status, "approved"));
-
   const workers = await db
     .select()
     .from(workersTable)
@@ -72,8 +72,11 @@ router.get("/workers", async (req, res) => {
         ? and(eq(workersTable.status, "approved"), inArray(workersTable.id, workerIds))
         : eq(workersTable.status, "approved")
     )
-    .limit(parseInt(limit as string))
-    .offset(parseInt(offset as string));
+    // Best-rated helpers first; NULLS LAST keeps new workers with no reviews
+    // from outranking proven ones.
+    .orderBy(sql`${workersTable.rating} desc nulls last`, desc(workersTable.completedBookings))
+    .limit(limit)
+    .offset(offset);
 
   const totalResult = await db
     .select({ count: sql<number>`count(*)` })
@@ -101,6 +104,7 @@ router.get("/workers/:id", async (req, res) => {
 router.get("/workers/:id/reviews", async (req, res) => {
   const id = parseInt(req.params.id);
   if (isNaN(id)) return res.status(400).json({ error: "bad_request", message: "Invalid id" });
+  const { limit, offset } = parsePagination(req.query as Record<string, unknown>, 20, 50);
 
   const bookingIds = await db
     .select({ id: bookingsTable.id })
@@ -112,7 +116,10 @@ router.get("/workers/:id/reviews", async (req, res) => {
   const reviews = await db
     .select()
     .from(reviewsTable)
-    .where(inArray(reviewsTable.bookingId, bookingIds.map((b) => b.id)));
+    .where(inArray(reviewsTable.bookingId, bookingIds.map((b) => b.id)))
+    .orderBy(desc(reviewsTable.createdAt))
+    .limit(limit)
+    .offset(offset);
 
   return res.json(
     reviews.map((r) => ({

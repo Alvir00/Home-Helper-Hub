@@ -1,20 +1,26 @@
-# Local end-to-end stack: Postgres + schema push + the single-container app.
+# Local end-to-end stack: Postgres + versioned migrations + the app.
 #
-#   docker compose up --build          # build, push schema, start on :8080
-#   docker compose run --rm migrate pnpm --filter @workspace/db run seed
+#   docker compose up -d --build          # build, migrate, start on :8080
+#   ADMIN_EMAIL=you@example.com ADMIN_PASSWORD='...' \
+#     SEED_DEMO_DATA=1 docker compose --profile tools run --rm seed
+#   docker compose logs -f app
 #
 # Production hosts should supply DATABASE_URL from their own managed Postgres
-# instead of the `db` service below.
+# instead of the `db` service below. See docs/DEPLOYMENT.md.
 
 services:
   db:
     image: postgres:16-alpine
+    restart: unless-stopped
+    init: true
     environment:
       POSTGRES_USER: meraki
       POSTGRES_PASSWORD: meraki
       POSTGRES_DB: meraki
     ports:
-      - "5432:5432"
+      # Bound to localhost: the database must never be reachable from the
+      # internet. Remove this mapping entirely on a VPS.
+      - "127.0.0.1:5432:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
     healthcheck:
@@ -22,43 +28,93 @@ services:
       interval: 5s
       timeout: 5s
       retries: 12
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
-  # One-shot: pushes the Drizzle schema, then exits. `app` waits for success.
+  # One-shot: applies versioned SQL migrations, then exits. `app` waits for
+  # success, so a bad migration stops the deploy instead of serving a broken app.
   migrate:
     build:
       context: .
       target: migrate
     environment:
-      DATABASE_URL: postgres://meraki:meraki@db:5432/meraki
+      DATABASE_URL: ${DATABASE_URL:-postgres://meraki:meraki@db:5432/meraki}
     depends_on:
       db:
         condition: service_healthy
     restart: "no"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
-  app:
+  # One-off seed / admin bootstrap. Not started by `up`; run explicitly:
+  #   ADMIN_EMAIL=you@example.com ADMIN_PASSWORD='...' docker compose --profile tools run --rm seed
+  seed:
+    profiles: ["tools"]
     build:
       context: .
-      target: runner
+      target: seed
     environment:
-      DATABASE_URL: postgres://meraki:meraki@db:5432/meraki
+      DATABASE_URL: ${DATABASE_URL:-postgres://meraki:meraki@db:5432/meraki}
       NODE_ENV: production
-      PORT: "8080"
-      WEB_DIST: /app/web
-      LOG_LEVEL: info
-      # Used for password-reset links: <APP_URL>/reset-password/<token>
-      APP_URL: http://localhost:8080
-      # Add any extra browser origin that must call the API:
-      # ALLOWED_ORIGINS: https://app.example.com
-      # Password reset email — without a key the link is only logged.
-      # RESEND_API_KEY: re_...
-      # MAIL_FROM: Meraki <no-reply@example.com>
-    ports:
-      - "8080:8080"
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      # Demo helpers/reviews are opt-in: pass SEED_DEMO_DATA=1 for a local demo.
+      # The default is safe for a real launch.
+      SEED_DEMO_DATA: ${SEED_DEMO_DATA:-0}
     depends_on:
       db:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
+    restart: "no"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  app:
+    build:
+      context: .
+      target: runner
+    restart: unless-stopped
+    init: true
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgres://meraki:meraki@db:5432/meraki}
+      NODE_ENV: production
+      PORT: "8080"
+      WEB_DIST: /app/web
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      # Used for password-reset and booking emails: <APP_URL>/...
+      APP_URL: ${APP_URL:-http://localhost:8080}
+      # Extra browser origins allowed to call the API (comma-separated):
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+      # Password reset and booking email — without a key they are only logged.
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+      BOOKING_NOTIFY_EMAIL: ${BOOKING_NOTIFY_EMAIL:-}
+      ERROR_WEBHOOK_URL: ${ERROR_WEBHOOK_URL:-}
+      # Paid plans stay disabled until a payment provider is connected.
+      ALLOW_UNPAID_SUBSCRIPTIONS: ${ALLOW_UNPAID_SUBSCRIPTIONS:-0}
+    ports:
+      # Localhost only: put Caddy/nginx in front for public traffic.
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   db-data:

@@ -1,4 +1,4 @@
-import { pgTable, serial, integer, text, timestamp, real, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, text, timestamp, real, pgEnum, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
@@ -13,6 +13,17 @@ export const bookingStatusEnum = pgEnum("booking_status", [
   "cancelled",
 ]);
 
+/**
+ * Payment state for a booking. Even when money changes hands in cash or via
+ * Telebirr outside the app, the admin console needs to record whether the job
+ * was paid so revenue can be reconciled.
+ */
+export const paymentStatusEnum = pgEnum("payment_status", [
+  "unpaid",
+  "paid",
+  "refunded",
+]);
+
 export const bookingsTable = pgTable("bookings", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
@@ -23,8 +34,16 @@ export const bookingsTable = pgTable("bookings", {
   notes: text("notes"),
   status: bookingStatusEnum("status").notNull().default("pending"),
   totalPrice: real("total_price").notNull(),
+  paymentStatus: paymentStatusEnum("payment_status").notNull().default("unpaid"),
+  paymentMethod: text("payment_method"),
+  paidAt: timestamp("paid_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => [
+  index("IDX_bookings_user_created").on(table.userId, table.createdAt),
+  index("IDX_bookings_worker_date").on(table.workerId, table.scheduledDate),
+  index("IDX_bookings_status").on(table.status),
+  index("IDX_bookings_created").on(table.createdAt),
+]);
 
 export const reviewsTable = pgTable("reviews", {
   id: serial("id").primaryKey(),

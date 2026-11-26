@@ -6,11 +6,11 @@ import { cn } from "@/lib/utils";
 /** Shared booking.com-style primitives used across the marketplace. */
 
 export const serviceImageMap: Record<string, string> = {
-  "Home Cleaning": "/service-cleaning.png",
-  "Kitchen Cleaning": "/service-kitchen.png",
-  "Laundry & Ironing": "/service-laundry.png",
-  "Combined Home & Laundry": "/service-combined.png",
-  "Bedroom Deep Clean": "/service-bedroom.png",
+  "Home Cleaning": "/service-cleaning.jpg",
+  "Kitchen Cleaning": "/service-kitchen.jpg",
+  "Laundry & Ironing": "/service-laundry.jpg",
+  "Combined Home & Laundry": "/service-combined.jpg",
+  "Bedroom Deep Clean": "/service-bedroom.jpg",
 };
 
 export function ratingLabel(score?: number | null): string {
@@ -135,6 +135,8 @@ export function PhotoTile({
           <img
             src={image}
             alt={title}
+            loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         </div>

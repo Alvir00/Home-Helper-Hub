@@ -69,8 +69,11 @@ export default function WorkerDetail() {
         {/* Left: photo, about, services, reviews */}
         <div className="lg:col-span-2 space-y-8">
           <img
-            src={worker.photoUrl || "/worker-1.png"}
+            src={worker.photoUrl || "/worker-1.jpg"}
             alt={worker.name}
+            width={800}
+            height={320}
+            decoding="async"
             className="w-full h-64 md:h-80 object-cover rounded-lg border border-border"
           />
 

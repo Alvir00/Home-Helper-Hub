@@ -75,7 +75,15 @@ export default function Workers() {
                 return (
                   <div key={w.id} className="hover-lift grid grid-cols-1 sm:grid-cols-[auto_1fr_auto] gap-4 rounded-lg border border-border bg-card p-4">
                     <Link href={`/workers/${w.id}`} className="block">
-                      <img src={w.photoUrl || "/worker-1.png"} alt={w.name} className="h-36 w-36 sm:h-40 sm:w-40 rounded-lg object-cover" />
+                      <img
+                        src={w.photoUrl || "/worker-1.jpg"}
+                        alt={w.name}
+                        width={160}
+                        height={160}
+                        loading="lazy"
+                        decoding="async"
+                        className="h-36 w-36 sm:h-40 sm:w-40 rounded-lg object-cover"
+                      />
                     </Link>
                     <div className="min-w-0">
                       <Link href={`/workers/${w.id}`} className="text-lg font-bold text-primary hover:underline">{w.name}</Link>

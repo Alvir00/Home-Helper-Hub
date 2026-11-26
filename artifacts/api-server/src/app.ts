@@ -1,11 +1,13 @@
-import express, { type Express } from "express";
+import express, { type Express, type NextFunction, type Request, type Response } from "express";
 import cors, { type CorsOptions, type CorsOptionsDelegate } from "cors";
 import cookieParser from "cookie-parser";
+import compression from "compression";
 import pinoHttp from "pino-http";
 import { authMiddleware } from "./middlewares/authMiddleware";
 import { securityHeaders } from "./middlewares/securityHeaders";
 import { mountWebApp } from "./static";
 import { rateLimit } from "./lib/rateLimit";
+import { reportError } from "./lib/alerts";
 import router from "./routes";
 import { logger } from "./lib/logger";
 
@@ -113,6 +115,15 @@ app.use(cors(corsDelegate));
 app.use(cookieParser());
 app.use(express.json({ limit: "100kb" }));
 app.use(express.urlencoded({ extended: true, limit: "100kb" }));
+// gzip/brotli every compressible response above the default 1 KB threshold.
+app.use(compression());
+
+// Expose the request id pino assigned so a user can quote it in a support
+// request and we can find the exact log line.
+app.use((req, res, next) => {
+  res.setHeader("X-Request-Id", String(req.id));
+  next();
+});
 
 // Broad abuse ceiling for the whole API surface; the auth routes carry their own
 // much tighter limiter (see routes/auth.ts).
@@ -130,5 +141,51 @@ app.use("/api", (_req, res) => {
 // Single-container hosting: serve the built SPA after the API so `/api` always
 // wins. No-op unless WEB_DIST is set (see static.ts).
 mountWebApp(app, process.env["WEB_DIST"]);
+
+// Final error boundary. Without this Express falls back to its HTML error page,
+// which leaks stack traces in development and breaks JSON clients in
+// production. Four arguments are required for Express to treat it as an error
+// handler.
+app.use((err: unknown, req: Request, res: Response, next: NextFunction) => {
+  if (res.headersSent) {
+    next(err);
+    return;
+  }
+
+  const error = err instanceof Error ? err : new Error(String(err));
+
+  // body-parser marks malformed JSON (400) and oversized bodies (413) with a
+  // status. Those are client mistakes, not crashes: do not page the operator.
+  const candidate: { status?: unknown; statusCode?: unknown } =
+    (err as { status?: unknown; statusCode?: unknown } | null) ?? {};
+  const rawStatus =
+    typeof candidate.status === "number"
+      ? candidate.status
+      : typeof candidate.statusCode === "number"
+        ? candidate.statusCode
+        : 500;
+  const status = rawStatus >= 400 && rawStatus <= 599 ? rawStatus : 500;
+
+  if (status >= 500) {
+    (req.log ?? logger).error({ err: error }, "Unhandled request error");
+    reportError("request", error);
+  } else {
+    (req.log ?? logger).warn({ err: error, status }, "Request rejected");
+  }
+
+  const message =
+    status === 413
+      ? "Request body is too large."
+      : status === 400
+        ? "Invalid JSON body."
+        : "Something went wrong. Please try again.";
+
+  res.status(status).json({
+    error:
+      status === 413 ? "payload_too_large" : status === 400 ? "bad_request" : "internal_error",
+    message,
+    requestId: String(req.id),
+  });
+});
 
 export default app;

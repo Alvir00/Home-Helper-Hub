@@ -1,4 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
+import { db, usersTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
 
 /**
  * Authentication state is resolved once, by `authMiddleware`, from either the
@@ -16,11 +18,33 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
   res.status(401).json({ error: "unauthorized", message: "Sign-in required" });
 }
 
-export function requireAdmin(req: Request, res: Response, next: NextFunction): void {
-  if (req.userRole !== "admin") {
+/**
+ * Admin check reads the role from the database instead of trusting the copy
+ * cached in the session. A demoted administrator therefore loses access
+ * immediately rather than keeping it until their 7-day session expires.
+ */
+export async function requireAdmin(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  if (!req.userId) {
+    res.status(401).json({ error: "unauthorized", message: "Sign-in required" });
+    return;
+  }
+
+  const [user] = await db
+    .select({ role: usersTable.role })
+    .from(usersTable)
+    .where(eq(usersTable.id, req.userId))
+    .limit(1);
+
+  if (user?.role !== "admin") {
     res.status(403).json({ error: "forbidden", message: "Admin access required" });
     return;
   }
+
+  req.userRole = "admin";
   next();
 }
 

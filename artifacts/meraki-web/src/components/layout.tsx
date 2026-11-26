@@ -138,8 +138,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <h3 className="mb-3 text-sm font-semibold text-white">Company</h3>
               <ul className="space-y-2 text-sm">
                 <li><Link href="/workers" className="hover:text-white hover:underline">Our helpers</Link></li>
-                <li><Link href="/workers" className="hover:text-white hover:underline">Become a helper</Link></li>
+                <li><Link href="/become-a-helper" className="hover:text-white hover:underline">Become a helper</Link></li>
                 <li><Link href="/book" className="hover:text-white hover:underline">Book a service</Link></li>
+                <li><Link href="/contact" className="hover:text-white hover:underline">Contact us</Link></li>
               </ul>
             </div>
             <div>
@@ -153,7 +154,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
           <div className="mt-10 border-t border-white/15 pt-6 flex flex-col md:flex-row items-center justify-between gap-3 text-xs">
             <p>© {new Date().getFullYear()} Meraki. All rights reserved.</p>
-            <p>Addis Ababa, Ethiopia · Prices in ETB</p>
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+              <Link href="/terms" className="hover:text-white hover:underline">Terms</Link>
+              <Link href="/privacy" className="hover:text-white hover:underline">Privacy</Link>
+              <Link href="/contact" className="hover:text-white hover:underline">Contact</Link>
+              <span>Addis Ababa, Ethiopia · Prices in ETB</span>
+            </div>
           </div>
         </div>
       </footer>

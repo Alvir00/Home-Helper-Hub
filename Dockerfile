@@ -54,21 +54,27 @@ RUN pnpm --filter @workspace/api-server run build
 FROM builder AS verify
 RUN pnpm run typecheck
 
-# ── schema push (one-shot, bootstrap only) ───────────────────────────────────
-# Uses `push` because this repo has no generated migrations yet. Replace with
-# `drizzle-kit migrate` once migrations exist — push can drop columns.
-FROM builder AS migrate
-CMD ["pnpm", "--filter", "@workspace/db", "run", "push-force"]
-
 # ── runtime ──────────────────────────────────────────────────────────────────
 FROM base AS runner
 ENV NODE_ENV=production \
     PORT=8080 \
-    WEB_DIST=/app/web
+    WEB_DIST=/app/web \
+    MIGRATIONS_DIR=/app/api/drizzle
 COPY --from=verify /app/artifacts/api-server/dist ./api
 COPY --from=verify /app/artifacts/meraki-web/dist/public ./web
+COPY --from=verify /app/lib/db/drizzle ./api/drizzle
 USER node
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||'8080')+'/api/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 CMD ["node", "--enable-source-maps", "api/index.mjs"]
+
+# ── schema migrations (versioned, never destructive) ─────────────────────────
+# Reuses the runtime image: `node api/migrate.mjs` applies every pending SQL
+# migration and exits. Deployable as a one-off job on any platform.
+FROM runner AS migrate
+CMD ["node", "api/migrate.mjs"]
+
+# ── seed / admin bootstrap (tools only, never started by `up`) ────────────────
+FROM runner AS seed
+CMD ["node", "api/seed.mjs"]

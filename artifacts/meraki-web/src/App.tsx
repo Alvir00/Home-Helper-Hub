@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
 import { Layout } from "@/components/layout";
 import { ProtectedRoute } from "@/components/protected-route";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 // Pages
 import Home from "@/pages/home";
@@ -20,10 +21,15 @@ import Bookings from "@/pages/bookings";
 import BookingDetail from "@/pages/booking-detail";
 import Plans from "@/pages/plans";
 import Dashboard from "@/pages/dashboard";
+import BecomeAHelper from "@/pages/become-a-helper";
+import Terms from "@/pages/terms";
+import Privacy from "@/pages/privacy";
+import Contact from "@/pages/contact";
 import AdminDashboard from "@/pages/admin-dashboard";
 import AdminWorkers from "@/pages/admin-workers";
 import AdminBookings from "@/pages/admin-bookings";
 import AdminUsers from "@/pages/admin-users";
+import AdminApplications from "@/pages/admin-applications";
 import Profile from "@/pages/profile";
 import NotFound from "@/pages/not-found";
 
@@ -51,6 +57,10 @@ function Router() {
         <Route path="/workers/:id" component={WorkerDetail} />
         <Route path="/plans" component={Plans} />
         <Route path="/book" component={Book} />
+        <Route path="/become-a-helper" component={BecomeAHelper} />
+        <Route path="/terms" component={Terms} />
+        <Route path="/privacy" component={Privacy} />
+        <Route path="/contact" component={Contact} />
 
         {/* Protected Household Routes */}
         <Route path="/dashboard">
@@ -79,6 +89,9 @@ function Router() {
         <Route path="/admin/users">
           {() => <ProtectedRoute requireAdmin><AdminUsers /></ProtectedRoute>}
         </Route>
+        <Route path="/admin/applications">
+          {() => <ProtectedRoute requireAdmin><AdminApplications /></ProtectedRoute>}
+        </Route>
 
         <Route component={NotFound} />
       </Switch>
@@ -92,7 +105,9 @@ function App() {
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
           <AuthProvider>
-            <Router />
+            <ErrorBoundary>
+              <Router />
+            </ErrorBoundary>
           </AuthProvider>
         </WouterRouter>
         <Toaster />

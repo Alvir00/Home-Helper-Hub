@@ -13,6 +13,7 @@ import {
 import { eq, and, gte, inArray, sql, desc } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
 import { requireAdmin } from "../middlewares/auth";
+import { parsePagination } from "../lib/pagination";
 
 const router = Router();
 
@@ -74,6 +75,9 @@ async function buildBookingResponse(booking: typeof bookingsTable.$inferSelect) 
     notes: booking.notes ?? null,
     status: booking.status,
     totalPrice: booking.totalPrice,
+    paymentStatus: booking.paymentStatus,
+    paymentMethod: booking.paymentMethod ?? null,
+    paidAt: booking.paidAt ? booking.paidAt.toISOString() : null,
     review: review
       ? {
           id: review.id,
@@ -85,6 +89,38 @@ async function buildBookingResponse(booking: typeof bookingsTable.$inferSelect) 
       : null,
     createdAt: booking.createdAt.toISOString(),
   };
+}
+
+function cleanText(value: unknown, maxLength: number): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed.slice(0, maxLength) : null;
+}
+
+function cleanPhone(value: unknown): string | null {
+  const phone = cleanText(value, 32);
+  if (phone === null) return null;
+  return /^\+?[0-9][0-9\s()-]*$/.test(phone) ? phone : null;
+}
+
+function cleanPhotoUrl(value: unknown): string | null {
+  const url = cleanText(value, 500);
+  if (url === null) return null;
+  return /^https?:\/\//i.test(url) || url.startsWith("/") ? url : null;
+}
+
+function cleanServiceIds(value: unknown): number[] {
+  if (!Array.isArray(value)) return [];
+  return [...new Set(value.filter((n): n is number => Number.isInteger(n) && n > 0))].slice(0, 20);
+}
+
+async function servicesExist(serviceIds: number[]): Promise<boolean> {
+  if (serviceIds.length === 0) return true;
+  const found = await db
+    .select({ id: servicesTable.id })
+    .from(servicesTable)
+    .where(inArray(servicesTable.id, serviceIds));
+  return found.length === serviceIds.length;
 }
 
 // User dashboard summary
@@ -109,7 +145,7 @@ router.get("/dashboard/summary", requireAuth, async (req, res) => {
     .from(bookingsTable)
     .where(eq(bookingsTable.userId, req.userId!))
     .limit(5)
-    .orderBy(bookingsTable.createdAt);
+    .orderBy(desc(bookingsTable.createdAt));
 
   const totalCount = await db
     .select({ count: sql<number>`count(*)` })
@@ -281,7 +317,8 @@ router.get("/dashboard/admin/summary", requireAuth, requireAdmin, async (_req, r
 
 // Admin: all bookings
 router.get("/dashboard/admin/bookings", requireAuth, requireAdmin, async (req, res) => {
-  const { status, limit = "20", offset = "0" } = req.query;
+  const { status } = req.query;
+  const { limit, offset } = parsePagination(req.query as Record<string, unknown>);
 
   const conditions = [];
   if (status && typeof status === "string") {
@@ -292,9 +329,9 @@ router.get("/dashboard/admin/bookings", requireAuth, requireAdmin, async (req, r
     .select()
     .from(bookingsTable)
     .where(conditions.length > 0 ? and(...conditions) : undefined)
-    .limit(parseInt(limit as string))
-    .offset(parseInt(offset as string))
-    .orderBy(bookingsTable.createdAt);
+    .limit(limit)
+    .offset(offset)
+    .orderBy(desc(bookingsTable.createdAt));
 
   const total = await db
     .select({ count: sql<number>`count(*)` })
@@ -307,7 +344,8 @@ router.get("/dashboard/admin/bookings", requireAuth, requireAdmin, async (req, r
 
 // Admin: all workers
 router.get("/dashboard/admin/workers", requireAuth, requireAdmin, async (req, res) => {
-  const { status, limit = "20", offset = "0" } = req.query;
+  const { status } = req.query;
+  const { limit, offset } = parsePagination(req.query as Record<string, unknown>);
 
   const conditions = [];
   if (status && typeof status === "string") {
@@ -318,8 +356,9 @@ router.get("/dashboard/admin/workers", requireAuth, requireAdmin, async (req, re
     .select()
     .from(workersTable)
     .where(conditions.length > 0 ? and(...conditions) : undefined)
-    .limit(parseInt(limit as string))
-    .offset(parseInt(offset as string));
+    .limit(limit)
+    .offset(offset)
+    .orderBy(desc(workersTable.createdAt));
 
   const total = await db
     .select({ count: sql<number>`count(*)` })
@@ -369,27 +408,40 @@ router.patch("/dashboard/admin/workers/:id", requireAuth, requireAdmin, async (r
   const id = parseInt(String(req.params.id));
   if (isNaN(id)) return res.status(400).json({ error: "bad_request", message: "Invalid id" });
 
-  const { name, bio, phone, photoUrl, serviceIds = [] } = req.body;
-  if (!name || typeof name !== "string") {
-    return res.status(400).json({ error: "bad_request", message: "Name is required" });
+  const name = cleanText(req.body?.name, 120);
+  if (!name || name.length < 2) {
+    return res.status(400).json({ error: "bad_request", message: "Name must be between 2 and 120 characters" });
+  }
+  const bio = cleanText(req.body?.bio, 1000);
+  const phone = cleanPhone(req.body?.phone);
+  if (req.body?.phone && phone === null) {
+    return res.status(400).json({ error: "bad_request", message: "Phone number is not valid" });
+  }
+  const photoUrl = cleanPhotoUrl(req.body?.photoUrl);
+  if (req.body?.photoUrl && photoUrl === null) {
+    return res.status(400).json({ error: "bad_request", message: "Photo URL must be an http(s) URL or a local path" });
+  }
+  const serviceIds = cleanServiceIds(req.body?.serviceIds);
+  if (!(await servicesExist(serviceIds))) {
+    return res.status(400).json({ error: "bad_request", message: "One or more services do not exist" });
   }
 
   const [worker] = await db
     .update(workersTable)
-    .set({ name, bio: bio || null, phone: phone || null, photoUrl: photoUrl || null })
+    .set({ name, bio, phone, photoUrl })
     .where(eq(workersTable.id, id))
     .returning();
 
   if (!worker) return res.status(404).json({ error: "not_found", message: "Worker not found" });
 
   await db.delete(workerServicesTable).where(eq(workerServicesTable.workerId, id));
-  if (Array.isArray(serviceIds) && serviceIds.length > 0) {
+  if (serviceIds.length > 0) {
     await db.insert(workerServicesTable).values(
-      serviceIds.map((sid: number) => ({ workerId: worker.id, serviceId: sid }))
-    );
+      serviceIds.map((sid) => ({ workerId: worker.id, serviceId: sid }))
+    ).onConflictDoNothing();
   }
 
-  const updatedServiceIds: number[] = Array.isArray(serviceIds) ? serviceIds : [];
+  const updatedServiceIds: number[] = serviceIds;
   const services =
     updatedServiceIds.length > 0
       ? await db.select().from(servicesTable).where(inArray(servicesTable.id, updatedServiceIds))
@@ -471,13 +523,12 @@ router.patch("/dashboard/admin/workers/:id/status", requireAuth, requireAdmin, a
 
 // Admin: list all users
 router.get("/dashboard/admin/users", requireAuth, requireAdmin, async (req, res) => {
-  const limit = parseInt(String(req.query.limit ?? "50"));
-  const offset = parseInt(String(req.query.offset ?? "0"));
+  const { limit, offset } = parsePagination(req.query as Record<string, unknown>, 50, 100);
 
   const users = await db
     .select()
     .from(usersTable)
-    .orderBy(usersTable.createdAt)
+    .orderBy(desc(usersTable.createdAt))
     .limit(limit)
     .offset(offset);
 
@@ -513,31 +564,43 @@ router.get("/dashboard/admin/users", requireAuth, requireAdmin, async (req, res)
 
 // Admin: create a worker directly
 router.post("/dashboard/admin/workers", requireAuth, requireAdmin, async (req, res) => {
-  const { name, bio, phone, photoUrl, serviceIds = [] } = req.body;
-
-  if (!name || typeof name !== "string") {
-    return res.status(400).json({ error: "bad_request", message: "Name is required" });
+  const name = cleanText(req.body?.name, 120);
+  if (!name || name.length < 2) {
+    return res.status(400).json({ error: "bad_request", message: "Name must be between 2 and 120 characters" });
+  }
+  const bio = cleanText(req.body?.bio, 1000);
+  const phone = cleanPhone(req.body?.phone);
+  if (req.body?.phone && phone === null) {
+    return res.status(400).json({ error: "bad_request", message: "Phone number is not valid" });
+  }
+  const photoUrl = cleanPhotoUrl(req.body?.photoUrl);
+  if (req.body?.photoUrl && photoUrl === null) {
+    return res.status(400).json({ error: "bad_request", message: "Photo URL must be an http(s) URL or a local path" });
+  }
+  const serviceIds = cleanServiceIds(req.body?.serviceIds);
+  if (!(await servicesExist(serviceIds))) {
+    return res.status(400).json({ error: "bad_request", message: "One or more services do not exist" });
   }
 
   const [worker] = await db
     .insert(workersTable)
     .values({
       name,
-      bio: bio || null,
-      phone: phone || null,
-      photoUrl: photoUrl || null,
+      bio,
+      phone,
+      photoUrl,
       status: "approved",
     })
     .returning();
 
-  if (Array.isArray(serviceIds) && serviceIds.length > 0) {
+  if (serviceIds.length > 0) {
     await db.insert(workerServicesTable).values(
-      serviceIds.map((sid: number) => ({ workerId: worker.id, serviceId: sid }))
-    );
+      serviceIds.map((sid) => ({ workerId: worker.id, serviceId: sid }))
+    ).onConflictDoNothing();
   }
 
   const services =
-    Array.isArray(serviceIds) && serviceIds.length > 0
+    serviceIds.length > 0
       ? await db.select().from(servicesTable).where(inArray(servicesTable.id, serviceIds))
       : [];
 

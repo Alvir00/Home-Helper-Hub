@@ -8,6 +8,7 @@ import workersRouter from "./workers";
 import bookingsRouter from "./bookings";
 import subscriptionsRouter from "./subscriptions";
 import dashboardRouter from "./dashboard";
+import workerApplicationsRouter from "./workerApplications";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(workersRouter);
 router.use(bookingsRouter);
 router.use(subscriptionsRouter);
 router.use(dashboardRouter);
+router.use(workerApplicationsRouter);
 
 export default router;

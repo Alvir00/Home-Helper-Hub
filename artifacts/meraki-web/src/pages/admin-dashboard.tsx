@@ -72,6 +72,9 @@ export default function AdminDashboard() {
           <Link href="/admin/bookings">
             <Button variant="outline" className="gap-2"><CalendarClock className="h-4 w-4" />Bookings</Button>
           </Link>
+          <Link href="/admin/applications">
+            <Button variant="outline" className="gap-2"><UserCheck className="h-4 w-4" />Applications</Button>
+          </Link>
         </div>
       </div>
 
@@ -189,7 +192,15 @@ export default function AdminDashboard() {
                       {i + 1}
                     </div>
                     {w.photoUrl ? (
-                      <img src={w.photoUrl} alt={w.name} className="w-9 h-9 rounded-full object-cover shrink-0" />
+                      <img
+                        src={w.photoUrl}
+                        alt={w.name}
+                        width={36}
+                        height={36}
+                        loading="lazy"
+                        decoding="async"
+                        className="w-9 h-9 rounded-full object-cover shrink-0"
+                      />
                     ) : (
                       <div className="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center text-primary font-semibold text-sm shrink-0">
                         {avatarInitials(w.name)}

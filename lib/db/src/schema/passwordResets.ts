@@ -20,5 +20,8 @@ export const passwordResetTokensTable = pgTable(
     usedAt: timestamp("used_at"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
-  (table) => [index("IDX_password_reset_expire").on(table.expiresAt)],
+  (table) => [
+    index("IDX_password_reset_expire").on(table.expiresAt),
+    index("IDX_password_reset_user").on(table.userId),
+  ],
 );
