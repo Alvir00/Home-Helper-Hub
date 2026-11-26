@@ -127,7 +127,7 @@ jobs:
         run: docker logs meraki || true
 
       - name: Scan image for known vulnerabilities (report only)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: meraki:ci
           format: table
